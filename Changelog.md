@@ -189,6 +189,19 @@ widened by a cancelled turn. The machine-checkable record declares
 `freshness: "unverified"`, `forced_continuation: false` and `resume_from: "dirty_scope"`, so a
 later run resumes from the preserved dirty scope instead of treating a cancel as completion.
 
+### A-021 — Version and certify adapter payloads
+
+Add `adapters/compatibility.json`. Every shipped host adapter records its declared host identity
+and surface, the exact adapter version, the protocol version, the documented sources, the
+boundary caveat, the per-feature status and the SHA256-pinned in-repository test evidence, and
+the recorded hash is checked against the bytes shipped in the bundle rather than trusted. No
+adapter is certified: certification requires a probed exact installed version, a tested operating
+system, a host runtime test artifact with its SHA256 and an enforcement level the evidence
+supports, so every adapter stays at `enforcement_level: "instructions_only"` with an explicit
+`certification_blocker` and an empty `host_runtime_evidence`. A documented capability table, an
+in-repository unit test, a mock or a cross-compile is never accepted as host certification, and a
+feature the host does not document cannot claim a status.
+
 ### Tests
 
 Extend `tests/test_canonical_workflows.py` with positive contract checks for the nine canonical
@@ -228,3 +241,9 @@ budget must be refused. The degraded policy is checked for an explicit per-repos
 unverified freshness and no claimed gate, and the cancellation contract is parsed from its
 shipped record, with negative and boundary variants that claim a gate ran, drop the resume
 requirement or discard the dirty state all rejected.
+
+The compatibility record is replayable as well: the checks reject an adapter certified without a
+probed installed version or host runtime evidence, a capability the host does not document that
+still claims a status, a test-evidence hash that no longer matches the shipped bytes, and an
+enforcement level raised above the evidence, while the shipped record keeps all four adapters
+uncertified and declared inside the bundle.

@@ -1913,6 +1913,296 @@ class CancellationContractTests(unittest.TestCase):
         problems = CancellationContractChecks.check(broken)
         self.assertTrue(any("dirty state" in problem for problem in problems), problems)
 
+class CompatibilityChecks:
+    """A-021 - adapter payload version and certification record.
+
+    The record may carry three separate claims: a capability is *documented*, it is
+    *in-repository tested*, or it is *certified on an installed host*. Only the last one may set
+    `certified: true`, and it must bring a probed exact installed version, a tested operating
+    system, a host runtime test artifact with its SHA256, and an enforcement level the evidence
+    supports. A documented capability table or an in-repository unit test is never accepted as
+    host certification.
+    """
+
+    PROFILE = "adapter-compatibility-v1"
+    SURFACES = ("cli", "ide", "ide_and_cli")
+    ENFORCEMENT_LEVELS = ("instructions_only", "hook_verified", "ci_verified")
+    FEATURES = (
+        "instructions",
+        "policy_read",
+        "skills",
+        "mcp_config",
+        "stop_hook",
+        "after_agent_hook",
+        "after_tool_hook",
+        "task_completed_hook",
+        "post_tool_use_hook",
+    )
+    STATUSES = ("declared", "in_repository_tested", "not_documented", "verified_on_installed_host")
+    SHA256 = re.compile(r"^[0-9a-f]{64}$")
+
+    @classmethod
+    def check(cls, record: dict, root: Path, manifest: dict) -> list[str]:
+        problems: list[str] = []
+        if record.get("component") != manifest.get("component"):
+            problems.append("record does not declare the owning component")
+        if record.get("profile") != cls.PROFILE:
+            problems.append("record does not declare the compatibility profile")
+        if record.get("component_version") != manifest.get("component_version"):
+            problems.append("record pins another component version than the shipped bundle")
+        if record.get("spec_version") != manifest.get("spec_version"):
+            problems.append("record pins another spec version than the shipped bundle")
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", str(record.get("as_of", ""))):
+            problems.append("record does not declare an as_of date")
+        if list(record.get("enforcement_levels", [])) != list(cls.ENFORCEMENT_LEVELS):
+            problems.append("record does not declare the three enforcement levels")
+        rules = record.get("certification_rules")
+        if not isinstance(rules, dict):
+            rules = {}
+            problems.append("record does not declare its certification rules")
+        for key in (
+            "requires_exact_installed_version",
+            "requires_tested_os",
+            "requires_protocol_version",
+            "requires_runtime_test_artifact_hash",
+            "documented_table_is_not_certification",
+            "in_repository_unit_test_is_not_host_certification",
+            "mock_or_cross_compile_is_not_certification",
+            "enforcement_level_must_not_exceed_evidence",
+            "undocumented_feature_must_not_claim_a_status",
+        ):
+            if rules.get(key) is not True:
+                problems.append(f"certification rule is not asserted: {key}")
+
+        declared = {
+            entry["path"]: entry.get("sha256")
+            for entry in manifest.get("files", [])
+            if isinstance(entry, dict) and isinstance(entry.get("path"), str)
+        }
+        minimum_protocol = (manifest.get("host_capability_requirements") or {}).get("minimum_host_protocol")
+        shipped = sorted(path.parent.name for path in (root / "adapters").glob("*/instructions.md"))
+        entries = record.get("adapters")
+        if not isinstance(entries, list) or not entries:
+            return problems + ["record declares no adapters"]
+
+        seen_ids: set[str] = set()
+        for entry in entries:
+            if not isinstance(entry, dict):
+                problems.append("adapter entry is not an object")
+                continue
+            adapter_id = str(entry.get("adapter_id", "?"))
+            seen_ids.add(adapter_id)
+            for field in ("adapter_id", "host", "boundary_caveat", "certification_blocker"):
+                value = entry.get(field)
+                if not isinstance(value, str) or not value.strip():
+                    problems.append(f"{adapter_id}: missing {field}")
+            if entry.get("surface") not in cls.SURFACES:
+                problems.append(f"{adapter_id}: undeclared surface")
+            if entry.get("adapter_version") != record.get("component_version"):
+                problems.append(f"{adapter_id}: adapter version does not match the component version")
+            protocol = entry.get("protocol_version")
+            if type(protocol) is not int or (isinstance(minimum_protocol, int) and protocol < minimum_protocol):
+                problems.append(f"{adapter_id}: protocol version is below the declared host requirement")
+            sources = entry.get("documented_sources")
+            if not isinstance(sources, list) or not sources:
+                problems.append(f"{adapter_id}: no documented sources recorded")
+            documented = entry.get("documented_features")
+            if not isinstance(documented, list) or not documented:
+                problems.append(f"{adapter_id}: no documented features recorded")
+                documented = []
+            for feature in documented:
+                if feature not in cls.FEATURES:
+                    problems.append(f"{adapter_id}: unknown documented feature {feature}")
+            rows = entry.get("features")
+            if not isinstance(rows, list) or not rows:
+                problems.append(f"{adapter_id}: no feature status rows recorded")
+                rows = []
+            recorded_features: set[str] = set()
+            for row in rows:
+                if not isinstance(row, dict):
+                    problems.append(f"{adapter_id}: feature row is not an object")
+                    continue
+                feature = row.get("feature")
+                status = row.get("status")
+                if feature not in cls.FEATURES:
+                    problems.append(f"{adapter_id}: unknown feature id {feature}")
+                    continue
+                recorded_features.add(feature)
+                if status not in cls.STATUSES:
+                    problems.append(f"{adapter_id}: unknown feature status {status}")
+                    continue
+                if status == "not_documented":
+                    if row.get("evidence") is not None:
+                        problems.append(f"{adapter_id}/{feature}: undocumented feature records evidence")
+                    continue
+                if feature not in documented:
+                    problems.append(f"{adapter_id}/{feature}: undocumented feature claims a status")
+                evidence = row.get("evidence")
+                if evidence not in declared:
+                    problems.append(f"{adapter_id}/{feature}: feature evidence is not a declared bundle file")
+            for feature in documented:
+                if feature not in recorded_features:
+                    problems.append(f"{adapter_id}/{feature}: documented feature has no recorded status")
+
+            evidence_rows = entry.get("repository_test_evidence")
+            if not isinstance(evidence_rows, list) or not evidence_rows:
+                problems.append(f"{adapter_id}: no repository test evidence recorded")
+                evidence_rows = []
+            for item in evidence_rows:
+                if not isinstance(item, dict):
+                    problems.append(f"{adapter_id}: test evidence row is not an object")
+                    continue
+                rel = item.get("path")
+                if rel not in declared:
+                    problems.append(f"{adapter_id}: test evidence path is not declared: {rel}")
+                    continue
+                digest = item.get("sha256")
+                if not cls.SHA256.match(str(digest)):
+                    problems.append(f"{adapter_id}: test evidence has no SHA256: {rel}")
+                elif digest != declared[rel]:
+                    problems.append(f"{adapter_id}: test evidence hash is not the declared bundle hash: {rel}")
+                elif digest != hashlib.sha256((root / rel).read_bytes()).hexdigest():
+                    problems.append(f"{adapter_id}: test evidence hash does not match the shipped bytes: {rel}")
+                if not str(item.get("test_class", "")).strip():
+                    problems.append(f"{adapter_id}: test evidence names no test class: {rel}")
+
+            runtime = entry.get("host_runtime_evidence")
+            if not isinstance(runtime, list):
+                problems.append(f"{adapter_id}: host runtime evidence is not a list")
+                runtime = []
+            runtime_ok = bool(runtime)
+            for item in runtime:
+                if not isinstance(item, dict) or not str(item.get("installed_version", "")).strip():
+                    problems.append(f"{adapter_id}: runtime evidence has no exact installed version")
+                    runtime_ok = False
+                if not isinstance(item, dict) or not str(item.get("os", "")).strip():
+                    problems.append(f"{adapter_id}: runtime evidence has no operating system")
+                    runtime_ok = False
+                if not isinstance(item, dict) or not cls.SHA256.match(str(item.get("artifact_sha256", ""))):
+                    problems.append(f"{adapter_id}: runtime evidence has no test artifact SHA256")
+                    runtime_ok = False
+
+            level = entry.get("enforcement_level")
+            if level not in cls.ENFORCEMENT_LEVELS:
+                problems.append(f"{adapter_id}: unknown enforcement level")
+            if level in ("hook_verified", "ci_verified") and not runtime_ok:
+                problems.append(f"{adapter_id}: hook or CI enforcement requires host runtime evidence")
+            if entry.get("certified") is True:
+                if not str(entry.get("installed_version") or "").strip():
+                    problems.append(f"{adapter_id}: certified adapter has no probed installed version")
+                if not entry.get("tested_os"):
+                    problems.append(f"{adapter_id}: certified adapter has no tested OS")
+                if not runtime_ok:
+                    problems.append(f"{adapter_id}: certified adapter has no valid host runtime evidence")
+                if level == "instructions_only":
+                    problems.append(f"{adapter_id}: certified adapter claims no hook gate")
+            behaviour = entry.get("installer_behaviour")
+            if not isinstance(behaviour, dict) or behaviour.get("preserves_existing_host_configuration") is not True:
+                problems.append(f"{adapter_id}: installer behaviour does not preserve host configuration")
+            elif behaviour.get("uninstall_removes_only_owned_files") is not True:
+                problems.append(f"{adapter_id}: uninstall does not remove only owned files")
+            if entry.get("certified") is False and not str(entry.get("certification_blocker", "")).strip():
+                problems.append(f"{adapter_id}: uncertified adapter records no blocker reason")
+
+        if sorted(seen_ids) != shipped:
+            problems.append("adapter coverage does not match the shipped adapter directories")
+        summary = record.get("certification_summary")
+        if not isinstance(summary, dict):
+            problems.append("record does not declare a certification summary")
+        else:
+            certified = sum(1 for entry in entries if isinstance(entry, dict) and entry.get("certified") is True)
+            runtime_tests = sum(
+                len(entry.get("host_runtime_evidence") or [])
+                for entry in entries
+                if isinstance(entry, dict) and isinstance(entry.get("host_runtime_evidence"), list)
+            )
+            if summary.get("declared_adapters") != len(entries):
+                problems.append("certification summary miscounts the declared adapters")
+            if summary.get("certified_adapters") != certified:
+                problems.append("certification summary miscounts the certified adapters")
+            if summary.get("host_runtime_tests_run") != runtime_tests:
+                problems.append("certification summary miscounts the host runtime tests")
+            if certified and summary.get("status") == "documented_and_in_repository_tested_not_certified":
+                problems.append("certification summary status contradicts a certified adapter")
+        return problems
+
+
+class AdapterCompatibilityTests(unittest.TestCase):
+    """A-021 - version and certify the shipped adapter payloads."""
+
+    DOC = "adapters/compatibility.json"
+
+    def record(self) -> dict:
+        return json.loads(read(self.DOC))
+
+    def manifest(self) -> dict:
+        return json.loads(read("release/skills-manifest.json"))
+
+    def problems(self, record: dict) -> list[str]:
+        return CompatibilityChecks.check(record, ROOT, self.manifest())
+
+    def test_record_satisfies_the_certification_contract(self):
+        self.assertEqual(self.problems(self.record()), [])
+
+    def test_no_adapter_is_certified_without_a_probed_host(self):
+        record = self.record()
+        self.assertTrue(record["adapters"])
+        for entry in record["adapters"]:
+            self.assertFalse(entry["certified"], entry["adapter_id"])
+            self.assertEqual(entry["version_probe"], "not_run", entry["adapter_id"])
+            self.assertIsNone(entry["installed_version"], entry["adapter_id"])
+            self.assertEqual(entry["tested_os"], [], entry["adapter_id"])
+            self.assertEqual(entry["host_runtime_evidence"], [], entry["adapter_id"])
+            self.assertEqual(entry["enforcement_level"], "instructions_only", entry["adapter_id"])
+            self.assertTrue(entry["certification_blocker"], entry["adapter_id"])
+
+    def test_every_shipped_adapter_is_recorded_with_pinned_test_evidence(self):
+        declared = {entry["path"] for entry in self.manifest()["files"]}
+        record = self.record()
+        shipped = sorted(path.parent.name for path in (ROOT / "adapters").glob("*/instructions.md"))
+        self.assertEqual(sorted(entry["adapter_id"] for entry in record["adapters"]), shipped)
+        for entry in record["adapters"]:
+            self.assertTrue(entry["repository_test_evidence"], entry["adapter_id"])
+            for item in entry["repository_test_evidence"]:
+                self.assertIn(item["path"], declared)
+                self.assertEqual(
+                    item["sha256"], hashlib.sha256((ROOT / item["path"]).read_bytes()).hexdigest(), item["path"]
+                )
+
+    def test_negative_adapter_certified_without_runtime_evidence_is_rejected(self):
+        record = self.record()
+        record["adapters"][0]["certified"] = True
+        record["certification_summary"]["certified_adapters"] = 1
+        problems = self.problems(record)
+        self.assertTrue(any("no probed installed version" in problem for problem in problems), problems)
+        self.assertTrue(any("no valid host runtime evidence" in problem for problem in problems), problems)
+        self.assertTrue(any("claims no hook gate" in problem for problem in problems), problems)
+
+    def test_negative_undocumented_feature_claim_is_rejected(self):
+        record = self.record()
+        for entry in record["adapters"]:
+            if entry["adapter_id"] != "gemini":
+                continue
+            for row in entry["features"]:
+                if row["feature"] == "task_completed_hook":
+                    row["status"] = "in_repository_tested"
+                    row["evidence"] = "adapters/gemini/instructions.md"
+        problems = self.problems(record)
+        self.assertTrue(any("undocumented feature claims a status" in problem for problem in problems), problems)
+
+    def test_boundary_stale_test_evidence_hash_is_rejected(self):
+        record = self.record()
+        record["adapters"][0]["repository_test_evidence"][0]["sha256"] = "0" * 64
+        problems = self.problems(record)
+        self.assertTrue(any("test evidence hash" in problem for problem in problems), problems)
+
+    def test_boundary_enforcement_level_above_the_evidence_is_rejected(self):
+        record = self.record()
+        record["adapters"][0]["enforcement_level"] = "hook_verified"
+        problems = self.problems(record)
+        self.assertTrue(any("requires host runtime evidence" in problem for problem in problems), problems)
+
+
 class AdapterManifestCoverageTests(unittest.TestCase):
     """A-010..A-020 - the host adapters and hooks stay inside the shipped bundle."""
 

@@ -141,6 +141,12 @@
       "role": "host-hook-contract",
       "sha256": "596ae4dd9acccd4eee8d65623e40f3bceeb811c0ccf624be47a6d6308ca4c613",
       "bytes": 4680
+    },
+    {
+      "path": "adapters/compatibility.json",
+      "role": "host-adapter-compatibility",
+      "sha256": "41b43840a24f80db6a3686f001d69f6b5b3c94a0c7bb98a7bd0466b416998f5d",
+      "bytes": 13508
     }
   ]
 }
