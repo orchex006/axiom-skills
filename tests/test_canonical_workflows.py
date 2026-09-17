@@ -1,18 +1,26 @@
-"""Targeted regression tests for the canonical policy and workflow skills.
+"""Targeted regression tests for the canonical policy, skills and host adapters.
 
-These tests cover the six canonical-workflow slices by checking the shipped artifacts and
-by replaying negative and boundary variants that must be rejected.
+These tests cover the canonical-workflow slices and the host instruction and hook adapters by
+checking the shipped artifacts and by replaying negative and boundary variants that must be
+rejected. Hook tests execute each hook the way its host does: JSON on stdin, JSON on stdout.
 """
 from __future__ import annotations
 
 import hashlib
 import importlib.util
 import json
+import os
 import re
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+
+# Host hooks run as standalone scripts. Never leave bytecode inside a declared bundle scope:
+# an undeclared file there fails the shipped reference manifest verifier.
+sys.dont_write_bytecode = True
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -859,5 +867,613 @@ class CodexAdapterTests(unittest.TestCase):
         self.assertTrue(any("does not bound forced continuations" in p for p in problems), problems)
 
 
+# ---------------------------------------------------------------------------
+# A-010, A-011, A-012 - per-host instruction adapters
+# ---------------------------------------------------------------------------
+
+
+class HostAdapterContract:
+    """Shared contract for every host instruction adapter in this bundle."""
+
+    ENFORCEMENT_LEVELS = ("instructions_only", "hook_verified", "ci_verified")
+    RESULT_FIELDS = (
+        "`action`",
+        "`reason`",
+        "`job_id`",
+        "`snapshot`",
+        "`freshness`",
+        "`coverage`",
+        "`retry_after_ms`",
+        "`hook_attempt`",
+    )
+    PIN_MARKER = "Record the pin in the host matrix"
+    POLICY_MARKER = "A link to the policy is not evidence that the policy was loaded."
+    LOOP_MARKER = "Allow at most two forced continuations for one unchanged fingerprint"
+    MANAGED_MARKERS = ("<!-- axiom-graph:begin -->", "<!-- axiom-graph:end -->")
+
+    @classmethod
+    def common_problems(cls, text: str, host_phrase: str) -> list[str]:
+        problems: list[str] = []
+        flat = flatten(text)
+        if host_phrase not in flat:
+            problems.append("adapter does not name the pinned host")
+        if "axiom host detect" not in text:
+            problems.append("adapter does not probe the installed host version")
+        if cls.PIN_MARKER not in text:
+            problems.append("adapter does not pin the probed host version and capabilities")
+        if "never auto-write an assumed hook configuration" not in flat:
+            problems.append("adapter auto-writes an assumed hook configuration")
+        if ".axiom/agent/policy.md" not in flat:
+            problems.append("adapter does not name the installed policy path")
+        if cls.POLICY_MARKER not in text:
+            problems.append("adapter treats a link as proof that the policy was loaded")
+        if "explicitly read" not in flat or "policy path and its digest" not in flat:
+            problems.append("adapter does not require an explicit policy read and a recorded digest")
+        for level in cls.ENFORCEMENT_LEVELS:
+            if level not in text:
+                problems.append(f"adapter does not declare the {level} enforcement level")
+        for field in cls.RESULT_FIELDS:
+            if field not in text:
+                problems.append(f"adapter does not map the canonical {field} field")
+        if "do not parse conversation transcripts" not in flat:
+            problems.append("adapter parses conversation transcripts")
+        if cls.LOOP_MARKER not in text:
+            problems.append("adapter does not bound forced continuations")
+        if "`stop_hook_active`" not in text:
+            problems.append("adapter does not honour the host reentrance flag")
+        if "never write a real bearer token into the shared repository" not in flat:
+            problems.append("adapter does not forbid storing a real token")
+        for marker in cls.MANAGED_MARKERS:
+            if marker not in text:
+                problems.append("adapter does not describe the managed instruction markers")
+                break
+        if "existing repository instructions remain authoritative" not in flat:
+            problems.append("adapter does not keep existing repository instructions authoritative")
+        if "preserves the host's existing configuration" not in flat:
+            problems.append("adapter does not preserve existing host configuration on removal")
+        return problems
+
+
+class ClaudeAdapterChecks(HostAdapterContract):
+    """A-010 - Claude Code host instruction adapter."""
+
+    @classmethod
+    def check(cls, text: str) -> list[str]:
+        problems = cls.common_problems(text, "claude code")
+        flat = flatten(text)
+        if "`claude.md`" not in flat:
+            problems.append("adapter does not document the CLAUDE.md instruction scope")
+        if "`taskcompleted`" not in flat or "`stop`" not in flat:
+            problems.append("adapter does not name the Stop and TaskCompleted events")
+        if "not every turn" not in flat:
+            problems.append("adapter does not limit TaskCompleted to the documented task lifecycle")
+        if "not the same as a user interrupt" not in flat:
+            problems.append("adapter conflates Stop with a user interrupt")
+        if "bounded reconcile failure blocks only where" not in flat:
+            problems.append("adapter does not bound where a reconcile failure may block")
+        if "`type`" not in text or "`url`" not in text:
+            problems.append("adapter does not use the native transport type and url schema")
+        return problems
+
+
+class GeminiAdapterChecks(HostAdapterContract):
+    """A-011 - Gemini CLI host instruction adapter."""
+
+    @classmethod
+    def check(cls, text: str) -> list[str]:
+        problems = cls.common_problems(text, "gemini cli")
+        flat = flatten(text)
+        if "`gemini.md`" not in flat:
+            problems.append("adapter does not document the GEMINI.md discovery scope")
+        if "no unrelated global instruction is overwritten" not in flat:
+            problems.append("adapter may overwrite an unrelated global instruction")
+        if "proven with a fixture" not in flat:
+            problems.append("adapter does not prove policy activation with a fixture")
+        if "`afteragent`" not in flat or "`aftertool`" not in flat:
+            problems.append("adapter does not name the AfterAgent and AfterTool events")
+        if "not the claude exit or json shape" not in flat:
+            problems.append("adapter reuses the Claude exit or JSON shape blindly")
+        if "`httpurl`" not in flat:
+            problems.append("adapter does not use the documented httpUrl transport field")
+        return problems
+
+
+class AntigravityAdapterChecks(HostAdapterContract):
+    """A-012 - Antigravity host instruction adapter."""
+
+    @classmethod
+    def check(cls, text: str) -> list[str]:
+        problems = cls.common_problems(text, "antigravity")
+        flat = flatten(text)
+        if "`posttooluse`" not in flat:
+            problems.append("adapter does not name the PostToolUse event")
+        if "an unrecognized path is reported" not in flat:
+            problems.append("adapter does not report an unrecognized rules or skill path")
+        if "documented output decision on this host is `continue`" not in flat:
+            problems.append("adapter does not use the documented continue stop decision")
+        if "not reused blindly" not in flat:
+            problems.append("adapter reuses another host's block payload blindly")
+        if "`serverurl`" not in flat:
+            problems.append("adapter does not use the documented serverUrl field")
+        if "`ide`" not in text or "`cli`" not in text:
+            problems.append("adapter does not separate the IDE and CLI surfaces")
+        return problems
+
+
+class ClaudeAdapterTests(unittest.TestCase):
+    """A-010 - Claude Code instruction adapter."""
+
+    PATH = "adapters/claude/instructions.md"
+
+    def test_adapter_satisfies_contract(self):
+        self.assertEqual(ClaudeAdapterChecks.check(read(self.PATH)), [])
+
+    def test_adapter_keeps_existing_repository_instructions_authoritative(self):
+        text = read(self.PATH)
+        self.assertIn(ClaudeAdapterChecks.POLICY_MARKER, text)
+        self.assertIn("existing repository instructions remain authoritative", flatten(text))
+        self.assertIn(".axiom/agent/POLICY.md", text)
+
+    def test_negative_adapter_that_imports_the_policy_instead_of_reading_it_is_rejected(self):
+        fixture = (
+            "# Claude Code adapter\n\n"
+            "Add an @import of .axiom/agent/POLICY.md to CLAUDE.md and assume the agent has\n"
+            "loaded it. Use TaskCompleted as a completion hook for every turn, and auto-write\n"
+            "the hook JSON for whatever host version is installed.\n"
+        )
+        problems = ClaudeAdapterChecks.check(fixture)
+        self.assertTrue(any("treats a link as proof" in p for p in problems), problems)
+        self.assertTrue(any("explicit policy read" in p for p in problems), problems)
+        self.assertTrue(any("does not limit TaskCompleted" in p for p in problems), problems)
+        self.assertTrue(any("does not pin the probed host" in p for p in problems), problems)
+        self.assertTrue(any("auto-writes an assumed hook configuration" in p for p in problems), problems)
+
+    def test_boundary_adapter_without_a_task_lifecycle_bound_is_rejected(self):
+        text = read(self.PATH).replace("not every turn", "for every turn")
+        problems = ClaudeAdapterChecks.check(text)
+        self.assertTrue(any("does not limit TaskCompleted" in p for p in problems), problems)
+
+
+class GeminiAdapterTests(unittest.TestCase):
+    """A-011 - Gemini CLI instruction adapter."""
+
+    PATH = "adapters/gemini/instructions.md"
+
+    def test_adapter_satisfies_contract(self):
+        self.assertEqual(GeminiAdapterChecks.check(read(self.PATH)), [])
+
+    def test_adapter_proves_activation_with_a_fixture(self):
+        text = read(self.PATH)
+        self.assertIn("Activation is proven with a fixture", text)
+        self.assertIn("`GEMINI.md`", text)
+
+    def test_negative_adapter_that_rewrites_the_global_instruction_file_is_rejected(self):
+        fixture = (
+            "# Gemini CLI adapter\n\n"
+            "Rewrite the user-level GEMINI.md in place so the Axiom block is always active,\n"
+            "and skip the fixture because listing the policy path is enough. Reuse the Claude\n"
+            "exit convention for the AfterAgent hook.\n"
+        )
+        problems = GeminiAdapterChecks.check(fixture)
+        self.assertTrue(any("may overwrite an unrelated global instruction" in p for p in problems), problems)
+        self.assertTrue(any("does not prove policy activation with a fixture" in p for p in problems), problems)
+        self.assertTrue(any("reuses the Claude exit" in p for p in problems), problems)
+        self.assertTrue(any("does not use the documented httpUrl" in p for p in problems), problems)
+
+    def test_boundary_adapter_that_drops_the_global_instruction_guard_is_rejected(self):
+        text = read(self.PATH).replace(
+            "no unrelated global instruction is overwritten",
+            "the global instruction file is rewritten",
+        )
+        problems = GeminiAdapterChecks.check(text)
+        self.assertTrue(any("may overwrite an unrelated global instruction" in p for p in problems), problems)
+
+
+class AntigravityAdapterTests(unittest.TestCase):
+    """A-012 - Antigravity instruction adapter."""
+
+    PATH = "adapters/antigravity/instructions.md"
+
+    def test_adapter_satisfies_contract(self):
+        self.assertEqual(AntigravityAdapterChecks.check(read(self.PATH)), [])
+
+    def test_adapter_follows_the_documented_installed_version(self):
+        text = read(self.PATH)
+        self.assertIn("an unrecognized path is reported", text)
+        self.assertIn("documented output decision on this host is `continue`", text)
+
+    def test_negative_adapter_that_accepts_an_unknown_rules_path_is_rejected(self):
+        fixture = (
+            "# Antigravity adapter\n\n"
+            "Write the Axiom rule into whichever rules directory exists and ignore the\n"
+            "reported version. Emit the other host's decision:block payload for the Stop hook.\n"
+        )
+        problems = AntigravityAdapterChecks.check(fixture)
+        self.assertTrue(any("does not report an unrecognized" in p for p in problems), problems)
+        self.assertTrue(any("does not use the documented continue stop decision" in p for p in problems), problems)
+        self.assertTrue(any("does not separate the IDE and CLI surfaces" in p for p in problems), problems)
+        self.assertTrue(any("does not use the documented serverUrl" in p for p in problems), problems)
+
+    def test_boundary_adapter_without_the_reported_path_rule_is_rejected(self):
+        text = read(self.PATH).replace(
+            "an unrecognized path is reported as a conflict",
+            "any rules path is accepted",
+        )
+        problems = AntigravityAdapterChecks.check(text)
+        self.assertTrue(any("does not report an unrecognized" in p for p in problems), problems)
+
+
+# ---------------------------------------------------------------------------
+# A-013, A-014, A-015 - completion hook adapters
+# ---------------------------------------------------------------------------
+
+
+def run_hook(relative: str, payload, state_dir: Path):
+    """Run a hook the way its host runs it, with isolated loop-guard state."""
+    env = dict(os.environ)
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env["PYTHONIOENCODING"] = "utf-8"
+    env["AXIOM_HOOK_STATE_DIR"] = str(state_dir)
+    data = payload if isinstance(payload, str) else json.dumps(payload)
+    proc = subprocess.run(
+        [sys.executable, "-X", "utf8", str(ROOT / relative)],
+        input=data,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    out = proc.stdout.strip()
+    return proc.returncode, (json.loads(out) if out else None), proc.stderr
+
+
+def load_module(relative: str, name: str):
+    """Import a hook module without writing bytecode into a declared bundle scope."""
+    spec = importlib.util.spec_from_file_location(name, ROOT / relative)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def status_report(profile: str, **overrides) -> dict:
+    report = {
+        "schema_profile": profile,
+        "status": "stale",
+        "dirty": True,
+        "pending_jobs": 1,
+        "job_id": "job-7",
+        "snapshot": "generation-7",
+        "freshness": "stale",
+        "coverage": "partial",
+        "retry_after_ms": 1500,
+        "source_fingerprint": "fingerprint-a",
+        "target_barrier": "graph-fresh",
+    }
+    report.update(overrides)
+    return report
+
+
+class HostHookContract:
+    """Shared contract for every Axiom completion-hook adapter in this bundle."""
+
+    RESULT_FIELDS = (
+        "action",
+        "reason",
+        "job_id",
+        "snapshot",
+        "freshness",
+        "coverage",
+        "retry_after_ms",
+        "hook_attempt",
+    )
+    ACTIONS = ("allow", "continue", "block", "advisory")
+    CAP = "MAX_FORCED_CONTINUATIONS = 2"
+
+    @classmethod
+    def check(cls, text: str, *, host: str, profile: str) -> list[str]:
+        problems: list[str] = []
+        flat = flatten(text)
+        if f'HOST = "{host}"' not in text:
+            problems.append("hook does not declare the pinned host")
+        if profile not in text:
+            problems.append("hook does not declare the schema profile it may trust")
+        if cls.CAP not in text:
+            problems.append("hook does not bound forced continuations to two")
+        if "stop_hook_active is set" not in flat.replace("`", ""):
+            problems.append("hook does not honour the host reentrance flag")
+        for action in cls.ACTIONS:
+            if f'"{action}"' not in text:
+                problems.append(f"hook does not map the canonical {action} action")
+        for field in cls.RESULT_FIELDS:
+            if f'"{field}"' not in text:
+                problems.append(f"hook does not carry the canonical {field} field")
+        if "stderr" not in flat:
+            problems.append("hook does not send diagnostics to stderr")
+        if "never parses a conversation transcript" not in flat:
+            problems.append("hook parses conversation transcripts")
+        if '{"decision": "block"' not in text:
+            problems.append("hook does not emit the documented block decision")
+        return problems
+
+
+class HookTestCase(unittest.TestCase):
+    """Shared harness: every hook runs with its own isolated bounded loop state."""
+
+    def setUp(self):
+        self.state_dir = Path(tempfile.mkdtemp(prefix="axiom-hook-state-"))
+        self.addCleanup(shutil.rmtree, self.state_dir, ignore_errors=True)
+
+    def run_hook(self, relative: str, payload):
+        return run_hook(relative, payload, self.state_dir)
+
+
+class CodexStopHookTests(HookTestCase):
+    """A-013 - Codex Stop hook adapter."""
+
+    HOOK = "adapters/codex/hooks/graph_stop.py"
+    PROFILE = "codex-stop-v1"
+
+    def payload(self, **overrides):
+        base = {"session_id": "session-1", "cwd": str(ROOT), "hook_event_name": "Stop"}
+        base.update(overrides)
+        return base
+
+    def test_hook_satisfies_the_adapter_contract(self):
+        problems = HostHookContract.check(read(self.HOOK), host="codex", profile=self.PROFILE)
+        self.assertEqual(problems, [])
+
+    def test_hook_blocks_while_a_bounded_reconcile_is_pending(self):
+        report = status_report(self.PROFILE)
+        rc, out, err = self.run_hook(self.HOOK, self.payload(axiom=report))
+        self.assertEqual(rc, 0)
+        self.assertEqual(out["decision"], "block")
+        self.assertIn("job-7", out["reason"])
+        rc, out, err = self.run_hook(self.HOOK, self.payload(axiom=report))
+        self.assertEqual(out["decision"], "block")
+        rc, out, err = self.run_hook(self.HOOK, self.payload(axiom=report))
+        self.assertEqual(out, {})
+        self.assertIn("loop guard", err)
+
+    def test_hook_emits_the_canonical_result_contract(self):
+        module = load_module(self.HOOK, "axiom_codex_graph_stop")
+        canonical, diagnostics = module.canonical_decide(
+            self.payload(axiom=status_report(self.PROFILE)),
+            cwd=ROOT,
+            path=self.state_dir / "state.json",
+        )
+        self.assertEqual(sorted(canonical), sorted(module.RESULT_FIELDS))
+        self.assertEqual(canonical["action"], "block")
+        self.assertEqual(canonical["hook_attempt"], 1)
+        self.assertEqual(canonical["job_id"], "job-7")
+        self.assertEqual(canonical["snapshot"], "generation-7")
+        self.assertEqual(canonical["freshness"], "stale")
+        self.assertEqual(canonical["coverage"], "partial")
+        self.assertEqual(canonical["retry_after_ms"], 1500)
+        self.assertEqual(
+            module.to_host_output(canonical),
+            {"decision": "block", "reason": canonical["reason"]},
+        )
+
+    def test_negative_hook_that_ignores_the_reentrance_flag_is_rejected(self):
+        rc, out, err = self.run_hook(
+            self.HOOK,
+            self.payload(stop_hook_active=True, axiom=status_report(self.PROFILE)),
+        )
+        self.assertEqual(out, {})
+        self.assertIn("stop_hook_active", err)
+        broken = read(self.HOOK).replace(
+            "stop_hook_active is set", "stop_hook_active is ignored"
+        )
+        problems = HostHookContract.check(broken, host="codex", profile=self.PROFILE)
+        self.assertTrue(any("reentrance" in p for p in problems), problems)
+
+    def test_negative_hook_that_blocks_without_a_trusted_status_is_rejected(self):
+        untrusted = (
+            {},
+            {"schema_profile": "untrusted-v9", "dirty": True, "pending_jobs": 4},
+            {"schema_profile": self.PROFILE, "status": "unavailable", "dirty": True},
+        )
+        for report in untrusted:
+            rc, out, err = self.run_hook(self.HOOK, self.payload(axiom=report))
+            self.assertEqual(rc, 0, report)
+            self.assertEqual(out, {}, report)
+
+    def test_boundary_hook_caps_forced_continuations_and_resets_a_changed_fingerprint(self):
+        report = status_report(self.PROFILE)
+        decisions = [
+            self.run_hook(self.HOOK, self.payload(axiom=report))[1].get("decision")
+            for _ in range(3)
+        ]
+        self.assertEqual(decisions, ["block", "block", None])
+        moved = status_report(self.PROFILE, source_fingerprint="fingerprint-b")
+        out = self.run_hook(self.HOOK, self.payload(axiom=moved))[1]
+        self.assertEqual(out.get("decision"), "block")
+
+    def test_boundary_hook_degrades_on_malformed_input_and_unusable_state(self):
+        rc, out, err = self.run_hook(self.HOOK, "{not json at all")
+        self.assertEqual((rc, out), (0, {}))
+        self.assertIn("malformed", err)
+        blocker = self.state_dir / "blocked"
+        blocker.write_text("not a directory", encoding="utf-8")
+        rc, out, err = run_hook(
+            self.HOOK, self.payload(axiom=status_report(self.PROFILE)), blocker / "nested"
+        )
+        self.assertEqual((rc, out), (0, {}))
+        self.assertIn("allowing the stop", err)
+
+
+class ClaudeStopHookTests(HookTestCase):
+    """A-014 - Claude Stop hook adapter."""
+
+    HOOK = "adapters/claude/hooks/graph_stop.py"
+    PROFILE = "claude-stop-v1"
+
+    def payload(self, **overrides):
+        base = {"session_id": "session-2", "cwd": str(ROOT), "hook_event_name": "Stop"}
+        base.update(overrides)
+        return base
+
+    def test_hook_satisfies_the_adapter_contract(self):
+        problems = HostHookContract.check(read(self.HOOK), host="claude", profile=self.PROFILE)
+        self.assertEqual(problems, [])
+
+    def test_hook_blocks_only_where_the_host_supports_a_stop_decision(self):
+        supported = status_report(self.PROFILE, capabilities={"stop_decision": True})
+        rc, out, err = self.run_hook(self.HOOK, self.payload(axiom=supported))
+        self.assertEqual(rc, 0)
+        self.assertEqual(out["decision"], "block")
+        unsupported = status_report(self.PROFILE, capabilities={"stop_decision": False})
+        rc, out, err = self.run_hook(self.HOOK, self.payload(axiom=unsupported))
+        self.assertEqual(out, {})
+        self.assertIn("does not support a stop decision", err)
+
+    def test_negative_hook_that_forces_a_user_interrupt_is_rejected(self):
+        rc, out, err = self.run_hook(
+            self.HOOK,
+            self.payload(stop_reason="user_interrupt", axiom=status_report(self.PROFILE)),
+        )
+        self.assertEqual(out, {})
+        self.assertIn("not claimed to invoke the Stop hook reliably", err)
+
+    def test_negative_hook_that_ignores_the_reentrance_flag_is_rejected(self):
+        rc, out, err = self.run_hook(
+            self.HOOK,
+            self.payload(stop_hook_active=True, axiom=status_report(self.PROFILE)),
+        )
+        self.assertEqual(out, {})
+        self.assertIn("stop_hook_active", err)
+        broken = read(self.HOOK).replace(
+            "stop_hook_active is set", "stop_hook_active is ignored"
+        )
+        problems = HostHookContract.check(broken, host="claude", profile=self.PROFILE)
+        self.assertTrue(any("reentrance" in p for p in problems), problems)
+
+    def test_boundary_hook_stops_forcing_after_the_documented_cap(self):
+        report = status_report(self.PROFILE, capabilities={"stop_decision": True})
+        decisions = [
+            self.run_hook(self.HOOK, self.payload(axiom=report))[1].get("decision")
+            for _ in range(3)
+        ]
+        self.assertEqual(decisions, ["block", "block", None])
+
+    def test_boundary_hook_ignores_events_it_does_not_own(self):
+        report = status_report(self.PROFILE, capabilities={"stop_decision": True})
+        rc, out, err = self.run_hook(
+            self.HOOK, self.payload(hook_event_name="TaskCompleted", axiom=report)
+        )
+        self.assertEqual(out, {})
+        self.assertIn("unexpected hook event", err)
+
+
+class ClaudeTaskCompletedHookTests(HookTestCase):
+    """A-015 - Claude TaskCompleted adapter."""
+
+    HOOK = "adapters/claude/hooks/graph_task_completed.py"
+    PROFILE = "claude-task-completed-v1"
+
+    def payload(self, **overrides):
+        base = {
+            "session_id": "session-3",
+            "cwd": str(ROOT),
+            "hook_event_name": "TaskCompleted",
+            "task_id": "task-9",
+            "task_subject": "Reconcile the graph",
+        }
+        base.update(overrides)
+        return base
+
+    def report(self, **overrides):
+        return status_report(self.PROFILE, capabilities={"task_completed_decision": True}, **overrides)
+
+    def test_hook_satisfies_the_adapter_contract(self):
+        text = read(self.HOOK)
+        problems = HostHookContract.check(text, host="claude", profile=self.PROFILE)
+        self.assertEqual(problems, [])
+        self.assertIn("not a universal response-completion hook", flatten(text))
+
+    def test_hook_blocks_a_task_completion_that_is_not_reconciled(self):
+        rc, out, err = self.run_hook(self.HOOK, self.payload(axiom=self.report()))
+        self.assertEqual(rc, 0)
+        self.assertEqual(out["decision"], "block")
+        self.assertIn("job-7", out["reason"])
+
+    def test_negative_hook_that_enforces_on_a_non_task_event_is_rejected(self):
+        rc, out, err = self.run_hook(
+            self.HOOK, self.payload(hook_event_name="Stop", axiom=self.report())
+        )
+        self.assertEqual(out, {})
+        self.assertIn("not a universal response-completion hook", err)
+
+    def test_negative_hook_that_enforces_without_a_task_identity_is_rejected(self):
+        rc, out, err = run_hook(
+            self.HOOK,
+            {
+                "session_id": "session-3",
+                "hook_event_name": "TaskCompleted",
+                "axiom": self.report(),
+            },
+            self.state_dir,
+        )
+        self.assertEqual(out, {})
+        self.assertIn("no task identity", err)
+
+    def test_boundary_hook_stops_forcing_after_the_documented_cap(self):
+        decisions = [
+            self.run_hook(self.HOOK, self.payload(axiom=self.report()))[1].get("decision")
+            for _ in range(3)
+        ]
+        self.assertEqual(decisions, ["block", "block", None])
+
+
+class AdapterManifestCoverageTests(unittest.TestCase):
+    """A-010..A-015 - the new host adapters stay inside the shipped bundle contract."""
+
+    def manifest(self) -> dict:
+        return json.loads(read("release/skills-manifest.json"))
+
+    def stage_bundle(self) -> Path:
+        root = Path(tempfile.mkdtemp(prefix="axiom-adapters-bundle-"))
+        self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+        for entry in self.manifest()["files"]:
+            target = root / entry["path"]
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes((ROOT / entry["path"]).read_bytes())
+        return root
+
+    def verifier_problems(self, root: Path) -> list[str]:
+        module = load_reference_verifier()
+        manifest_path = root / "manifest.json"
+        manifest_path.write_text(json.dumps(self.manifest(), indent=2), encoding="utf-8")
+        return module.verify(manifest_path, root)
+
+    def test_every_adapter_file_is_declared_in_the_manifest(self):
+        declared = {entry["path"] for entry in self.manifest()["files"]}
+        adapters = sorted(
+            path.relative_to(ROOT).as_posix()
+            for path in (ROOT / "adapters").rglob("*")
+            if path.is_file()
+        )
+        self.assertTrue(adapters)
+        for relative in adapters:
+            self.assertIn(relative, declared, relative)
+
+    def test_reference_verifier_accepts_the_bundle_with_the_new_adapters(self):
+        module = load_reference_verifier()
+        self.assertEqual(module.verify(ROOT / "release" / "skills-manifest.json", ROOT), [])
+
+    def test_negative_undeclared_hook_inside_the_adapter_scope_is_rejected(self):
+        root = self.stage_bundle()
+        stray = root / "adapters" / "gemini" / "hooks" / "graph_after_agent.py"
+        stray.parent.mkdir(parents=True, exist_ok=True)
+        stray.write_text("# not declared yet\n", encoding="utf-8")
+        problems = self.verifier_problems(root)
+        self.assertTrue(any("unknown file inside a declared scope" in p for p in problems), problems)
+
+    def test_boundary_bytecode_inside_a_declared_scope_is_rejected(self):
+        root = self.stage_bundle()
+        cache = root / "adapters" / "codex" / "hooks" / "__pycache__"
+        cache.mkdir(parents=True, exist_ok=True)
+        (cache / "graph_stop.cpython-311.pyc").write_bytes(b"\x00\x01\x02")
+        problems = self.verifier_problems(root)
+        self.assertTrue(any("unknown file inside a declared scope" in p for p in problems), problems)
 if __name__ == "__main__":
     unittest.main()

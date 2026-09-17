@@ -75,6 +75,42 @@
       "role": "host-adapter",
       "sha256": "7712b7672a4b1d2fe11d02b3d39fcae04406838b5ecf43686a992368ba3bc8bb",
       "bytes": 4528
+    },
+    {
+      "path": "adapters/claude/instructions.md",
+      "role": "host-adapter",
+      "sha256": "586f87fe319106903db39ff4d7459a9b5b3bee37359fb3ba9517ca958979245f",
+      "bytes": 5525
+    },
+    {
+      "path": "adapters/gemini/instructions.md",
+      "role": "host-adapter",
+      "sha256": "13bddc002f9bc0baf85e8e91b5d8ecb24af1bde10ceecd42e9d8b979899f473c",
+      "bytes": 5022
+    },
+    {
+      "path": "adapters/antigravity/instructions.md",
+      "role": "host-adapter",
+      "sha256": "b9fb8fb748503acba0586bd8fd38817636dadd6b59937c650ec941c48c67d525",
+      "bytes": 5205
+    },
+    {
+      "path": "adapters/codex/hooks/graph_stop.py",
+      "role": "host-hook",
+      "sha256": "bc5e62750c96ee14c59c4c90fe21f73fdb68930c8b017d6021a41f58912e94ed",
+      "bytes": 11558
+    },
+    {
+      "path": "adapters/claude/hooks/graph_stop.py",
+      "role": "host-hook",
+      "sha256": "bf57f0567943bfb3b3a3b332161c1b69e967cadfd7f05bab050b0a6aa2009d5d",
+      "bytes": 12581
+    },
+    {
+      "path": "adapters/claude/hooks/graph_task_completed.py",
+      "role": "host-hook",
+      "sha256": "3b8def3693a54f88375416c21afa13ff97d53ef9705f54f7226d497b4d55a23c",
+      "bytes": 12218
     }
   ]
 }

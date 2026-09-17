@@ -83,6 +83,63 @@ link to the policy is not evidence that the policy was loaded. The canonical hoo
 enforcement level, the transcript-parsing prohibition, the two-continuation loop guard, the
 `bearer_token_env_var` credential rule and the managed instruction markers are all stated.
 
+### A-010 — Create Claude Code instruction adapter
+
+Add `adapters/claude/instructions.md`. The adapter pins the probed host version and
+capability set before anything is written, declares the `instructions_only`, `hook_verified`
+and `ci_verified` enforcement levels, and names the `CLAUDE.md` instruction scope plus the
+`Stop` and `TaskCompleted` events. `TaskCompleted` is bound to the documented task lifecycle
+and is not treated as a hook for every turn, a Stop continuation is not the same as a user
+interrupt, and a bounded reconcile failure blocks only where the pinned version documents a
+stop decision. A link to the policy is not evidence that the policy was loaded, so the agent
+must explicitly read `.axiom/agent/POLICY.md` and record the path and digest.
+
+### A-011 — Create Gemini CLI instruction adapter
+
+Add `adapters/gemini/instructions.md`. The adapter covers `GEMINI.md` discovery, the MCP
+configuration and the `AfterAgent` and `AfterTool` hooks, and keeps the user-level context
+file human-owned: the repository-local managed block is staged around byte-identical human
+text, activation is proven with a fixture rather than assumed, and no unrelated global
+instruction is overwritten. The host's own JSON and exit conventions are used instead of the
+Claude exit or JSON shape, and the MCP transport uses the documented `httpUrl` field.
+
+### A-012 — Create Antigravity host adapter
+
+Add `adapters/antigravity/instructions.md`. The adapter separates the IDE and CLI surfaces
+with their own versions, paths and hook behaviour, and requires `axiom host detect` plus a
+recorded pin in the host matrix. An unrecognized path is reported as a conflict rather than
+written to. The `Stop` hook's documented output decision on this host is `continue`, carried
+with the reason, and the other host's `decision: block` payload is not reused blindly; the MCP
+configuration uses the documented `serverUrl` field. Human rules outside the managed markers
+are preserved, and existing repository instructions remain authoritative over the managed block.
+
+### A-013 — Create Codex Stop hook adapter
+
+Add `adapters/codex/hooks/graph_stop.py`. The hook maps a Codex payload to a canonical result
+(`action`, `reason`, `job_id`, `snapshot`, `freshness`, `coverage`, `retry_after_ms`,
+`hook_attempt`) and maps that result back to the host's documented output, emitting the block
+decision only for its declared `codex-stop-v1` schema profile. It honours `stop_hook_active`
+and allows at most two forced continuations for one unchanged fingerprint. A malformed payload,
+an unrecognised profile, an unavailable status or an unreadable state file degrades to an empty
+decision plus a stderr diagnostic, and the hook never parses a conversation transcript.
+
+### A-014 — Create Claude Stop hook adapter
+
+Add `adapters/claude/hooks/graph_stop.py`. The adapter is the Claude counterpart of A-013 with
+its own pinned host and `claude-stop-v1` profile, and it blocks only where the installed host
+reports the capability: when the host does not support a stop decision the bounded reconcile
+failure is reported as `advisory` instead. A user interrupt is never force-continued, and the
+adapter states that Claude is not claimed to invoke the Stop hook reliably for every surface.
+
+### A-015 — Create Claude task-completion hook adapter
+
+Add `adapters/claude/hooks/graph_task_completed.py`. Enforcement is scoped to the documented
+`TaskCompleted` event and a real task identity, so the adapter is not a universal
+response-completion hook: an ordinary turn, a message, a tool result or a user interrupt is
+left alone. The task transition may be blocked only while a bounded graph reconcile is still
+pending and only for the declared `claude-task-completed-v1` profile, with the same
+two-continuation loop guard and the same degrade-to-empty-and-diagnose behaviour.
+
 ### Tests
 
 Extend `tests/test_canonical_workflows.py` with positive contract checks for the nine canonical
@@ -98,3 +155,14 @@ changed declared file, and a Codex adapter that treats a policy link as proof th
 loaded or retries the stop hook without a bound. The manifest tests replay the shipped
 `release/verify_manifest.py` against staged bundles, so the install-failure contract is executed
 rather than asserted. A dedicated `unittest` class binds each slice to its task.
+
+The same module now covers the three additional host adapters and the three completion hooks
+with a shared adapter contract and a shared hook contract. Each host adapter is checked for the
+version pin, the policy-read requirement, the canonical result fields, the two-continuation loop
+guard, the reentrance flag and the managed markers, and each is replayed against a negative
+fixture and a boundary fixture that removes one required rule. Each hook is run the way its host
+runs it, with JSON on stdin and an isolated loop-guard state directory, so block, cap,
+reentrance, interrupt, malformed-input, untrusted-profile and non-task-event behaviour are
+executed rather than described. The bundle is declared with 14 files across the `policy`,
+`skills` and `adapters` scopes, and the bytecode hygiene assertions keep a declared scope free
+of generated `__pycache__` content.
