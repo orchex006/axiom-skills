@@ -1,0 +1,3 @@
+# The skills bundle is hash-verified: release/skills-manifest.json declares SHA256 and byte
+# counts for the declared files, so a checkout must reproduce the committed bytes exactly.
+* -text

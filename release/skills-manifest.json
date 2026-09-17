@@ -1,0 +1,80 @@
+{
+  "manifest_version": 1,
+  "component": "axiom-skills",
+  "component_version": "0.1.0-draft.1",
+  "channel": "draft",
+  "released": false,
+  "spec_version": "2.0.0-draft.1",
+  "install_policy": {
+    "declared_scope": [
+      "policy",
+      "skills",
+      "adapters"
+    ],
+    "missing_files": "fail",
+    "hash_mismatch": "fail",
+    "byte_count_mismatch": "fail",
+    "unknown_files": "fail",
+    "duplicate_declaration": "fail",
+    "requires_explicit_human_approval": true,
+    "reference_verifier": "release/verify_manifest.py"
+  },
+  "host_capability_requirements": {
+    "skills_directory": "required",
+    "managed_agents_md": "required",
+    "mcp_query_service": "required",
+    "policy_read": "required",
+    "hook_support": "optional",
+    "minimum_host_protocol": 1
+  },
+  "files": [
+    {
+      "path": "policy/POLICY.md",
+      "role": "policy",
+      "sha256": "96713d17e1e82dac2636dec746ed9ce5b57efd097e714ea119e59c061306133f",
+      "bytes": 5153
+    },
+    {
+      "path": "skills/graph-context/SKILL.md",
+      "role": "skill",
+      "sha256": "7b62ed7fc0db9c407e3c87a27f5789d4da9774b7624dbf0795c7c5c9ad47b072",
+      "bytes": 3432
+    },
+    {
+      "path": "skills/graph-reconcile/SKILL.md",
+      "role": "skill",
+      "sha256": "fe30997c49637a3bba824374b36d7f4604189e6824d372ab6387cb22efd0d38d",
+      "bytes": 3635
+    },
+    {
+      "path": "skills/graph-impact/SKILL.md",
+      "role": "skill",
+      "sha256": "835ab8635130964006a251d5f64cfdac6126d72f0fe00f07e4b9ac586e916353",
+      "bytes": 4490
+    },
+    {
+      "path": "skills/graph-checkpoint/SKILL.md",
+      "role": "skill",
+      "sha256": "2b60d4855b1a0b05db4498a8b261dfc60ff3ba8a87381f5f8018ec755c4036c4",
+      "bytes": 5822
+    },
+    {
+      "path": "skills/graph-doctor/SKILL.md",
+      "role": "skill",
+      "sha256": "1ba3c81d05cca260fd6d445ace819565197085718a85f1e3f5b01f25dd078090",
+      "bytes": 5634
+    },
+    {
+      "path": "skills/graph-update/SKILL.md",
+      "role": "skill",
+      "sha256": "51bfccb938717ecc73e029979f25fa4c88223be187dce10e081e24b54bb94696",
+      "bytes": 5535
+    },
+    {
+      "path": "adapters/codex/instructions.md",
+      "role": "host-adapter",
+      "sha256": "7712b7672a4b1d2fe11d02b3d39fcae04406838b5ecf43686a992368ba3bc8bb",
+      "bytes": 4528
+    }
+  ]
+}

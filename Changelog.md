@@ -51,13 +51,50 @@ rebuilding the live graph, the queue database or daemon state is explicitly not 
 step. Authentication, bind addresses, freshness checks and host configuration are never
 weakened to clear a symptom.
 
+### A-007 — Create approved version-update skill
+
+Add `skills/graph-update/SKILL.md`. A version check reports `installed`, `available`,
+`compatible`, `channel`, `schema_range`, `update_policy` and `needs_restart` without ever
+guessing that an unknown or offline result is up to date. Check and plan are separate from
+apply: `axiom update apply --plan <digest>` runs only for a plan digest a human approved for
+that exact scope, re-verifies the installed state and refuses instead of silently replanning.
+Auto-apply is disabled by default, rollback is bounded to owned files whose after-hash is
+unchanged, and repository content — a skill file, a document, a graph payload, a task
+description, a commit message — can never authorize an apply.
+
+### A-008 — Create canonical policy/skill package manifest
+
+Add `release/skills-manifest.json` with the component version, the declared install scope, the
+host capability requirements and the declared files with their SHA256 and byte counts, plus
+the reference verifier `release/verify_manifest.py`. The manifest declares and the verifier
+enforces the strict install policy: a missing file, a hash or byte-count mismatch, a duplicate
+declaration or an unknown file inside a declared scope fails install. Nothing is repaired in
+place and an install still requires an explicit human approval.
+
+### A-009 — Create Codex instruction adapter
+
+Add `adapters/codex/instructions.md`. The adapter pins the probed host version and capability
+set, falls back to a manual preview on an unknown version, and never auto-writes an assumed
+hook configuration. Instruction discovery is not treated as evidence of reading: the agent
+must explicitly read `.axiom/agent/POLICY.md` and record the policy path and digest, because a
+link to the policy is not evidence that the policy was loaded. The canonical hook result
+(`action`, `reason`, `job_id`, `snapshot`, `freshness`, `coverage`, `retry_after_ms`,
+`hook_attempt`), the declaration of an `instructions_only`, `hook_verified` or `ci_verified`
+enforcement level, the transcript-parsing prohibition, the two-continuation loop guard, the
+`bearer_token_env_var` credential rule and the managed instruction markers are all stated.
+
 ### Tests
 
-Extend `tests/test_canonical_workflows.py` with positive contract checks for the six canonical
+Extend `tests/test_canonical_workflows.py` with positive contract checks for the nine canonical
 workflow artifacts, structural sequencing checks (expected impact stated before the comparison,
-staged verification before commit), and negative or boundary fixtures that must be rejected: a
-policy that misses the canonical graph directory or grants permissions, a context skill whose
-projection request is missing or reordered after source reading, a reconcile skill that
-rebuilds on every edit, an impact skill that turns a missing edge into a no-impact claim, a
-checkpoint skill that exports an unstaged working tree, and a diagnostics skill that treats
-every symptom as delete-and-rebuild. A dedicated `unittest` class binds each slice to its task.
+staged verification before commit, apply approval sequenced after check and plan), and negative
+or boundary fixtures that must be rejected: a policy that misses the canonical graph directory
+or grants permissions, a context skill whose projection request is missing or reordered after
+source reading, a reconcile skill that rebuilds on every edit, an impact skill that turns a
+missing edge into a no-impact claim, a checkpoint skill that exports an unstaged working tree, a
+diagnostics skill that treats every symptom as delete-and-rebuild, an update skill that applies
+the newest release from repository text without approval, a bundle with an undeclared file or a
+changed declared file, and a Codex adapter that treats a policy link as proof the policy was
+loaded or retries the stop hook without a bound. The manifest tests replay the shipped
+`release/verify_manifest.py` against staged bundles, so the install-failure contract is executed
+rather than asserted. A dedicated `unittest` class binds each slice to its task.
