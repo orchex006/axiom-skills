@@ -49,20 +49,20 @@
     {
       "path": "skills/graph-impact/SKILL.md",
       "role": "skill",
-      "sha256": "835ab8635130964006a251d5f64cfdac6126d72f0fe00f07e4b9ac586e916353",
-      "bytes": 4490
+      "sha256": "56d4cd787530cf07bf5eae473cb2e14d5e22ad76713d1e246fdfccae2392d3d2",
+      "bytes": 4489
     },
     {
       "path": "skills/graph-checkpoint/SKILL.md",
       "role": "skill",
-      "sha256": "2b60d4855b1a0b05db4498a8b261dfc60ff3ba8a87381f5f8018ec755c4036c4",
-      "bytes": 5822
+      "sha256": "acc44509ade81953cc4ac92028bf0722ba85366333cf104aa1a74edd618abb0f",
+      "bytes": 5821
     },
     {
       "path": "skills/graph-doctor/SKILL.md",
       "role": "skill",
-      "sha256": "1ba3c81d05cca260fd6d445ace819565197085718a85f1e3f5b01f25dd078090",
-      "bytes": 5634
+      "sha256": "34a2d9c0dc05671b59e3f3b25d26cbe5d7a267da0e1aaee2d979d73df79cc4c4",
+      "bytes": 5558
     },
     {
       "path": "skills/graph-update/SKILL.md",
