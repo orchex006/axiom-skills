@@ -6,8 +6,10 @@ rejected. Hook tests execute each hook the way its host does: JSON on stdin, JSO
 """
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import importlib.util
+import io
 import json
 import os
 import re
@@ -15,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -1167,6 +1170,7 @@ class HostHookContract:
     )
     ACTIONS = ("allow", "continue", "block", "advisory")
     CAP = "MAX_FORCED_CONTINUATIONS = 2"
+    BLOCK_OUTPUT = '{"decision": "block"'
 
     @classmethod
     def check(cls, text: str, *, host: str, profile: str) -> list[str]:
@@ -1190,8 +1194,8 @@ class HostHookContract:
             problems.append("hook does not send diagnostics to stderr")
         if "never parses a conversation transcript" not in flat:
             problems.append("hook parses conversation transcripts")
-        if '{"decision": "block"' not in text:
-            problems.append("hook does not emit the documented block decision")
+        if cls.BLOCK_OUTPUT not in text:
+            problems.append("hook does not emit the host's documented decision")
         return problems
 
 
@@ -1424,8 +1428,493 @@ class ClaudeTaskCompletedHookTests(HookTestCase):
         self.assertEqual(decisions, ["block", "block", None])
 
 
+class AntigravityStopHookContract(HostHookContract):
+    """A-017 - this host documents `continue`, never another host's block payload."""
+
+    BLOCK_OUTPUT = '{"decision": "continue"'
+
+
+class GeminiAfterAgentHookTests(HookTestCase):
+    """A-016 - Gemini AfterAgent hook adapter."""
+
+    HOOK = "adapters/gemini/hooks/graph_after_agent.py"
+    PROFILE = "gemini-after-agent-v1"
+
+    def payload(self, **overrides):
+        base = {"session_id": "session-4", "cwd": str(ROOT), "hook_event_name": "AfterAgent"}
+        base.update(overrides)
+        return base
+
+    def test_hook_satisfies_the_adapter_contract(self):
+        text = read(self.HOOK)
+        problems = HostHookContract.check(text, host="gemini", profile=self.PROFILE)
+        self.assertEqual(problems, [])
+        flat = flatten(text)
+        for phrase in ("retry", "halt", "strict json", "retry_remaining"):
+            self.assertIn(phrase, flat)
+        module = load_module(self.HOOK, "axiom_gemini_graph_after_agent")
+        self.assertEqual(module.HOST_DECISIONS, ("retry", "halt"))
+
+    def test_hook_requests_a_bounded_retry_for_pending_work(self):
+        rc, out, err = self.run_hook(self.HOOK, self.payload(axiom=status_report(self.PROFILE)))
+        self.assertEqual(rc, 0)
+        self.assertEqual(out["decision"], "retry")
+        self.assertIn("job-7", out["reason"])
+        self.assertEqual(out["retry_after_ms"], 1500)
+
+    def test_hook_maps_the_canonical_result_to_the_host_retry_shape(self):
+        module = load_module(self.HOOK, "axiom_gemini_graph_after_agent_shape")
+        canonical, diagnostics = module.canonical_decide(
+            self.payload(axiom=status_report(self.PROFILE)),
+            cwd=ROOT,
+            path=self.state_dir / "state.json",
+        )
+        self.assertEqual(sorted(canonical), sorted(module.RESULT_FIELDS))
+        self.assertEqual(canonical["action"], "block")
+        self.assertEqual(canonical["hook_attempt"], 1)
+        self.assertEqual(canonical["job_id"], "job-7")
+        self.assertEqual(canonical["snapshot"], "generation-7")
+        mapped = module.to_host_output(canonical)
+        self.assertEqual(mapped["decision"], "retry")
+        self.assertEqual(mapped["reason"], canonical["reason"])
+        self.assertNotIn("block", json.dumps(mapped))
+
+    def test_negative_hook_that_assumes_an_unbounded_retry_budget_is_rejected(self):
+        report = status_report(self.PROFILE, retry_remaining=0)
+        rc, out, err = self.run_hook(self.HOOK, self.payload(axiom=report))
+        self.assertEqual((rc, out), (0, {}))
+        self.assertIn("budget", err)
+        for untrusted in (
+            {},
+            {"schema_profile": "untrusted-v9", "dirty": True, "pending_jobs": 4},
+            {"schema_profile": self.PROFILE, "status": "unavailable", "dirty": True},
+        ):
+            rc, out, err = self.run_hook(self.HOOK, self.payload(axiom=untrusted))
+            self.assertEqual((rc, out), (0, {}), untrusted)
+
+    def test_boundary_hook_honours_the_host_budget_and_keeps_stdout_strict(self):
+        report = status_report(self.PROFILE, retry_remaining=1)
+        decisions = [
+            self.run_hook(self.HOOK, self.payload(axiom=report))[1].get("decision")
+            for _ in range(2)
+        ]
+        self.assertEqual(decisions, ["retry", None])
+        module = load_module(self.HOOK, "axiom_gemini_graph_after_agent_stdout")
+        out = io.StringIO()
+        err = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            rc = module.main(stdin=io.StringIO("{not json at all"), stderr=err)
+        self.assertEqual(rc, 0)
+        self.assertEqual(out.getvalue(), "{}\n")
+        self.assertIn("malformed", err.getvalue())
+        self.assertNotIn("graph_after_agent", out.getvalue())
+
+    def test_boundary_hook_ignores_events_it_does_not_own(self):
+        rc, out, err = self.run_hook(
+            self.HOOK,
+            self.payload(hook_event_name="AfterTool", axiom=status_report(self.PROFILE)),
+        )
+        self.assertEqual(out, {})
+        self.assertIn("unexpected hook event", err)
+
+
+class AntigravityStopHookTests(HookTestCase):
+    """A-017 - Antigravity Stop hook adapter."""
+
+    HOOK = "adapters/antigravity/hooks/graph_stop.py"
+    PROFILE = "antigravity-stop-v1"
+
+    def payload(self, **overrides):
+        base = {"session_id": "session-5", "cwd": str(ROOT), "hook_event_name": "Stop"}
+        base.update(overrides)
+        return base
+
+    def test_hook_satisfies_the_adapter_contract(self):
+        text = read(self.HOOK)
+        self.assertEqual(
+            HostHookContract.check(text, host="antigravity", profile=self.PROFILE), []
+        )
+        self.assertEqual(
+            AntigravityStopHookContract.check(text, host="antigravity", profile=self.PROFILE), []
+        )
+        self.assertIn("not reused blindly", flatten(text))
+        module = load_module(self.HOOK, "axiom_antigravity_graph_stop")
+        self.assertEqual(module.HOST_DECISIONS, ("continue",))
+
+    def test_hook_emits_the_documented_continue_decision(self):
+        rc, out, err = self.run_hook(self.HOOK, self.payload(axiom=status_report(self.PROFILE)))
+        self.assertEqual(rc, 0)
+        self.assertEqual(out["decision"], "continue")
+        self.assertIn("job-7", out["reason"])
+        self.assertNotIn("block", json.dumps(out))
+
+    def test_negative_hook_that_reuses_another_hosts_block_payload_is_rejected(self):
+        module = load_module(self.HOOK, "axiom_antigravity_graph_stop_shape")
+        canonical, diagnostics = module.canonical_decide(
+            self.payload(axiom=status_report(self.PROFILE)),
+            cwd=ROOT,
+            path=self.state_dir / "state.json",
+        )
+        self.assertEqual(canonical["action"], "block")
+        mapped = module.to_host_output(canonical)
+        self.assertEqual(mapped["decision"], "continue")
+        self.assertNotIn('"block"', json.dumps(mapped))
+        self.assertIn('{"decision": "block"', read("adapters/claude/hooks/graph_stop.py"))
+        broken = read(self.HOOK).replace('{"decision": "continue"', '{"decision": "block"')
+        problems = AntigravityStopHookContract.check(
+            broken, host="antigravity", profile=self.PROFILE
+        )
+        self.assertTrue(any("documented" in p for p in problems), problems)
+
+    def test_negative_hook_that_forces_a_user_interrupt_is_rejected(self):
+        rc, out, err = self.run_hook(
+            self.HOOK,
+            self.payload(stop_reason="user_interrupt", axiom=status_report(self.PROFILE)),
+        )
+        self.assertEqual(out, {})
+        self.assertIn("never force-continued", err)
+
+    def test_boundary_hook_stops_forcing_after_the_documented_cap(self):
+        decisions = [
+            self.run_hook(self.HOOK, self.payload(axiom=status_report(self.PROFILE)))[1].get(
+                "decision"
+            )
+            for _ in range(3)
+        ]
+        self.assertEqual(decisions, ["continue", "continue", None])
+
+    def test_boundary_hook_degrades_where_the_host_has_no_stop_decision(self):
+        unsupported = status_report(self.PROFILE, capabilities={"stop_decision": False})
+        rc, out, err = self.run_hook(self.HOOK, self.payload(axiom=unsupported))
+        self.assertEqual(out, {})
+        self.assertIn("does not support a stop decision", err)
+        rc, out, err = self.run_hook(
+            self.HOOK, self.payload(hook_event_name="PostToolUse", axiom=status_report(self.PROFILE))
+        )
+        self.assertEqual(out, {})
+        self.assertIn("unexpected hook event", err)
+
+
+class HookRuntimeChecks:
+    """A-018 - shared bounded hook runtime contract."""
+
+    RESULT_FIELDS = (
+        "action",
+        "reason",
+        "job_id",
+        "snapshot",
+        "freshness",
+        "coverage",
+        "retry_after_ms",
+        "hook_attempt",
+    )
+
+    @classmethod
+    def check(cls, text: str, module) -> list[str]:
+        problems: list[str] = []
+        flat = flatten(text)
+        for phrase in ("pending evidence", "hang completion indefinitely", "daemon", "timeout"):
+            if phrase not in flat:
+                problems.append(f"runtime does not state {phrase!r}")
+        if "HARD_MAX_RETRIES = 2" not in text:
+            problems.append("runtime does not pin the documented retry cap")
+        if "max_retries > HARD_MAX_RETRIES" not in text:
+            problems.append("runtime does not refuse a retry count above the documented cap")
+        if "timeout_ms <= 0" not in text:
+            problems.append("runtime does not refuse a non-positive timeout")
+        if "print(" in text:
+            problems.append("runtime writes to the host's structured channel")
+        if "def run_bounded(" not in text or "def bounded_budget(" not in text:
+            problems.append("runtime does not expose the bounded entry points")
+        for field in cls.RESULT_FIELDS:
+            if f'"{field}"' not in text:
+                problems.append(f"runtime drops the canonical {field} field")
+        if getattr(module, "HARD_MAX_RETRIES", None) != 2:
+            problems.append("runtime does not bound retries to two")
+        if getattr(module, "EVIDENCE_STATES", None) != ("complete", "pending"):
+            problems.append("runtime does not declare its evidence states")
+        for kind in ("timeout", "crashed", "retry_cap"):
+            if kind not in getattr(module, "FAILURE_KINDS", ()):
+                problems.append(f"runtime does not carry the {kind} failure kind")
+        return problems
+
+
+class HookRuntimeTests(unittest.TestCase):
+    """A-018 - bounded hook runtime."""
+
+    RUNTIME = "adapters/common/hook_runtime.py"
+
+    def module(self):
+        return load_module(self.RUNTIME, "axiom_hook_runtime")
+
+    def test_runtime_satisfies_the_declared_contract(self):
+        module = self.module()
+        self.assertEqual(HookRuntimeChecks.check(read(self.RUNTIME), module), [])
+
+    def test_runtime_returns_pending_evidence_when_the_daemon_never_answers(self):
+        module = self.module()
+        started = time.monotonic()
+        result = module.run_bounded(lambda: time.sleep(10), timeout_ms=100, max_retries=1)
+        self.assertLess(time.monotonic() - started, 5.0)
+        self.assertEqual(result["evidence"], "pending")
+        self.assertEqual(result["pending"], True)
+        self.assertEqual(result["action"], "allow")
+        self.assertEqual(result["attempts"], 2)
+        self.assertIn("pending evidence", result["reason"])
+
+    def test_runtime_records_a_daemon_crash_as_pending_evidence(self):
+        module = self.module()
+
+        def crash():
+            raise RuntimeError("the daemon died")
+
+        result = module.run_bounded(crash, timeout_ms=250, max_retries=0)
+        self.assertEqual(result["evidence"], "pending")
+        self.assertEqual(result["failure"], "crashed")
+        self.assertEqual(result["action"], "allow")
+        self.assertIn("pending evidence", result["reason"])
+
+    def test_negative_runtime_that_accepts_an_unbounded_budget_is_rejected(self):
+        module = self.module()
+        for timeout_ms, max_retries in ((0, 0), (-1, 1), (2000, 10), (2000, -1), (True, 0)):
+            with self.assertRaises(module.UnboundedBudgetError):
+                module.bounded_budget(timeout_ms, max_retries)
+        with self.assertRaises(module.UnboundedBudgetError):
+            module.run_bounded(lambda: None, timeout_ms=0)
+        broken = read(self.RUNTIME).replace("if max_retries > HARD_MAX_RETRIES:", "if False:")
+        problems = HookRuntimeChecks.check(broken, module)
+        self.assertTrue(problems, problems)
+
+    def test_boundary_runtime_makes_exactly_one_attempt_with_zero_retries(self):
+        module = self.module()
+        attempts = []
+        result = module.run_bounded(
+            lambda: time.sleep(10),
+            timeout_ms=100,
+            max_retries=0,
+            on_attempt=lambda number, value, failure: attempts.append((number, failure)),
+        )
+        self.assertEqual(attempts, [(1, "timeout")])
+        self.assertEqual(result["failure"], "timeout")
+        self.assertEqual(result["hook_attempt"], 1)
+        self.assertEqual(result["retries_left"], 0)
+
+    def test_boundary_runtime_does_not_retry_a_bounded_success(self):
+        module = self.module()
+        attempts = []
+        result = module.run_bounded(
+            lambda: {"action": "continue", "reason": "bounded reconcile finished", "job_id": "job-1"},
+            timeout_ms=500,
+            max_retries=2,
+            on_attempt=lambda number, value, failure: attempts.append(number),
+        )
+        self.assertEqual(attempts, [1])
+        self.assertEqual(result["evidence"], "complete")
+        self.assertEqual(result["action"], "continue")
+        self.assertEqual(result["job_id"], "job-1")
+        self.assertEqual(result["pending"], False)
+        self.assertEqual(result["retries_left"], 2)
+
+
+class DegradedPolicyChecks:
+    """A-019 - explicit mode per repository; fail-open never claims verified freshness."""
+
+    MODES = ("strict", "advisory")
+    ACTIONS = ("advisory", "pending")
+    INVARIANTS = (
+        "explicit_mode_required",
+        "fail_open_never_claims_fresh_freshness",
+        "fail_open_never_claims_a_completion_gate_ran",
+        "unknown_repo_is_not_fail_open",
+    )
+
+    @classmethod
+    def check(cls, policy: dict) -> list[str]:
+        problems: list[str] = []
+        if policy.get("profile") != "degraded-policy-v1":
+            problems.append("policy does not declare the degraded-policy profile")
+        invariants = policy.get("invariants")
+        invariants = invariants if isinstance(invariants, dict) else {}
+        for key in cls.INVARIANTS:
+            if invariants.get(key) is not True:
+                problems.append(f"policy does not declare the invariant {key}")
+        repos = policy.get("repos")
+        repos = repos if isinstance(repos, list) else []
+        if not repos:
+            problems.append("policy declares no repository entries")
+        entries = repos + [policy.get("unknown_repo")]
+        seen: set[str] = set()
+        for index, entry in enumerate(entries):
+            if not isinstance(entry, dict):
+                problems.append("policy entry is not an object")
+                continue
+            name = entry.get("repo") or "unknown_repo"
+            if index == len(entries) - 1 and not entry.get("repo"):
+                name = "unknown_repo"
+            if name in seen:
+                problems.append(f"policy declares duplicate entries for {name}")
+            seen.add(name)
+            if entry.get("mode") not in cls.MODES:
+                problems.append(f"{name} does not declare an explicit strict or advisory mode")
+            fail_open = entry.get("fail_open")
+            if type(fail_open) is not bool:
+                problems.append(f"{name} does not declare fail_open explicitly")
+            path = entry.get("on_unavailable")
+            if not isinstance(path, dict):
+                problems.append(f"{name} does not declare its degraded path")
+                continue
+            if path.get("action") not in cls.ACTIONS:
+                problems.append(f"{name} declares no documented degraded action")
+            if path.get("freshness") not in ("unverified",):
+                problems.append(f"{name} claims verified graph freshness: {path.get('freshness')!r}")
+            if path.get("completion_gate") != "not_claimed":
+                problems.append(f"{name} claims a completion gate ran: {path.get('completion_gate')!r}")
+            if fail_open is True and path.get("action") != "advisory":
+                problems.append(f"{name} fail-open path does not degrade to advisory")
+            if fail_open is False and path.get("action") != "pending":
+                problems.append(f"{name} non-fail-open path does not return pending evidence")
+        unknown = policy.get("unknown_repo")
+        if (
+            not isinstance(unknown, dict)
+            or unknown.get("mode") != "strict"
+            or unknown.get("fail_open") is not False
+        ):
+            problems.append("unknown repository policy is not an explicit non-fail-open default")
+        return problems
+
+
+class DegradedPolicyTests(unittest.TestCase):
+    """A-019 - graph-unavailable fallback policy."""
+
+    POLICY = "adapters/common/degraded_policy.json"
+
+    def policy(self) -> dict:
+        return json.loads(read(self.POLICY))
+
+    def test_policy_declares_an_explicit_mode_for_every_repository(self):
+        policy = self.policy()
+        self.assertEqual(DegradedPolicyChecks.check(policy), [])
+        modes = {entry["repo"]: entry["mode"] for entry in policy["repos"]}
+        self.assertEqual(
+            sorted(modes), ["axiom-graphd", "axiom-mcp", "axiom-skills", "axiom-specs"]
+        )
+        self.assertEqual(set(modes.values()), {"strict", "advisory"})
+
+    def test_policy_labels_every_degraded_path_as_unverified(self):
+        for entry in self.policy()["repos"]:
+            self.assertEqual(entry["on_unavailable"]["freshness"], "unverified", entry["repo"])
+            self.assertEqual(
+                entry["on_unavailable"]["completion_gate"], "not_claimed", entry["repo"]
+            )
+
+    def test_negative_fail_open_that_claims_verified_freshness_is_rejected(self):
+        policy = self.policy()
+        policy["repos"][2]["on_unavailable"]["freshness"] = "fresh"
+        problems = DegradedPolicyChecks.check(policy)
+        self.assertTrue(any("freshness" in problem for problem in problems), problems)
+
+    def test_negative_entry_without_an_explicit_mode_is_rejected(self):
+        policy = self.policy()
+        del policy["repos"][0]["mode"]
+        problems = DegradedPolicyChecks.check(policy)
+        self.assertTrue(any("explicit" in problem for problem in problems), problems)
+
+    def test_boundary_entry_that_claims_a_completion_gate_ran_is_rejected(self):
+        policy = self.policy()
+        policy["repos"][3]["on_unavailable"]["completion_gate"] = "bounded_verify"
+        problems = DegradedPolicyChecks.check(policy)
+        self.assertTrue(any("completion gate" in problem for problem in problems), problems)
+
+
+class CancellationContractChecks:
+    """A-020 - cancellation preserves durable dirty state and claims no gate."""
+
+    PHRASES = (
+        "user cancel",
+        "shutdown",
+        "durable dirty state",
+        "without claiming a completion gate ran",
+        "a completion gate ran",
+        "completion_gate",
+        "resume_from",
+        "stop_hook_active",
+        "stderr",
+    )
+
+    @classmethod
+    def record(cls, text: str) -> dict:
+        block = re.search(r"```json\s*(.*?)```", text, re.S)
+        return json.loads(block.group(1)) if block else {}
+
+    @classmethod
+    def check(cls, text: str) -> list[str]:
+        problems: list[str] = []
+        flat = flatten(text)
+        for phrase in cls.PHRASES:
+            if phrase not in flat:
+                problems.append(f"cancellation contract does not state {phrase!r}")
+        if "cancel is not completion" not in flat:
+            problems.append("cancellation contract does not separate cancellation from completion")
+        if "preserved" not in flat:
+            problems.append("cancellation contract does not preserve the dirty state")
+        record = cls.record(text)
+        if not record:
+            problems.append("cancellation contract declares no machine-checkable record")
+            return problems
+        if record.get("dirty_state") != "preserved":
+            problems.append("cancellation record does not preserve durable dirty state")
+        if record.get("durable") is not True:
+            problems.append("cancellation record is not durable")
+        if record.get("completion_gate") != "not_run":
+            problems.append("cancellation record claims a completion gate ran")
+        if record.get("freshness") != "unverified":
+            problems.append("cancellation record claims verified freshness")
+        if record.get("forced_continuation") is not False:
+            problems.append("cancellation record forces a continuation")
+        if record.get("resume_from") != "dirty_scope":
+            problems.append("cancellation record does not say where to resume")
+        for outcome in ("user_cancel", "shutdown", "error", "abort"):
+            if outcome not in record.get("outcomes", []):
+                problems.append(f"cancellation record does not carry the {outcome} path")
+        return problems
+
+
+class CancellationContractTests(unittest.TestCase):
+    """A-020 - cancellation is separated from completion."""
+
+    DOC = "adapters/common/cancellation.md"
+
+    def test_contract_satisfies_the_declared_rules(self):
+        self.assertEqual(CancellationContractChecks.check(read(self.DOC)), [])
+
+    def test_record_preserves_dirty_state_and_claims_no_gate(self):
+        record = CancellationContractChecks.record(read(self.DOC))
+        self.assertEqual(record["dirty_state"], "preserved")
+        self.assertEqual(record["durable"], True)
+        self.assertEqual(record["completion_gate"], "not_run")
+        self.assertEqual(record["freshness"], "unverified")
+        self.assertEqual(record["forced_continuation"], False)
+        self.assertEqual(record["resume_from"], "dirty_scope")
+
+    def test_negative_contract_that_claims_a_completion_gate_ran_is_rejected(self):
+        broken = read(self.DOC).replace(
+            '"completion_gate": "not_run"', '"completion_gate": "ran"'
+        )
+        problems = CancellationContractChecks.check(broken)
+        self.assertTrue(any("completion gate" in problem for problem in problems), problems)
+
+    def test_negative_contract_that_drops_the_resume_requirement_is_rejected(self):
+        broken = read(self.DOC).replace('"resume_from": "dirty_scope"', '"resume_from": ""')
+        problems = CancellationContractChecks.check(broken)
+        self.assertTrue(any("resume" in problem for problem in problems), problems)
+
+    def test_boundary_contract_that_discards_the_dirty_state_is_rejected(self):
+        broken = read(self.DOC).replace('"dirty_state": "preserved"', '"dirty_state": "discarded"')
+        problems = CancellationContractChecks.check(broken)
+        self.assertTrue(any("dirty state" in problem for problem in problems), problems)
+
 class AdapterManifestCoverageTests(unittest.TestCase):
-    """A-010..A-015 - the new host adapters stay inside the shipped bundle contract."""
+    """A-010..A-020 - the host adapters and hooks stay inside the shipped bundle."""
 
     def manifest(self) -> dict:
         return json.loads(read("release/skills-manifest.json"))
@@ -1462,7 +1951,7 @@ class AdapterManifestCoverageTests(unittest.TestCase):
 
     def test_negative_undeclared_hook_inside_the_adapter_scope_is_rejected(self):
         root = self.stage_bundle()
-        stray = root / "adapters" / "gemini" / "hooks" / "graph_after_agent.py"
+        stray = root / "adapters" / "gemini" / "hooks" / "graph_after_tool.py"
         stray.parent.mkdir(parents=True, exist_ok=True)
         stray.write_text("# not declared yet\n", encoding="utf-8")
         problems = self.verifier_problems(root)

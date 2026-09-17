@@ -111,6 +111,36 @@
       "role": "host-hook",
       "sha256": "3b8def3693a54f88375416c21afa13ff97d53ef9705f54f7226d497b4d55a23c",
       "bytes": 12218
+    },
+    {
+      "path": "adapters/gemini/hooks/graph_after_agent.py",
+      "role": "host-hook",
+      "sha256": "24473d21399a3d4e7bd0512fc358df927527e65e68eb87bb4e35a9580162e9c1",
+      "bytes": 12850
+    },
+    {
+      "path": "adapters/antigravity/hooks/graph_stop.py",
+      "role": "host-hook",
+      "sha256": "e93e80ff4ea1ecfc57e84151f6d7a668b2d4568462b4852abcee71d3c482bf2b",
+      "bytes": 12919
+    },
+    {
+      "path": "adapters/common/hook_runtime.py",
+      "role": "host-hook-runtime",
+      "sha256": "f77ce2d9479ecccf308bb5f1e794ac0239ab4480758bc0f5ab727f10a95f4fdd",
+      "bytes": 8877
+    },
+    {
+      "path": "adapters/common/degraded_policy.json",
+      "role": "host-hook-policy",
+      "sha256": "92125d9958f7b12ba84072e716d4b307c2124370cb3ba892773e6c0d55472a0a",
+      "bytes": 2326
+    },
+    {
+      "path": "adapters/common/cancellation.md",
+      "role": "host-hook-contract",
+      "sha256": "596ae4dd9acccd4eee8d65623e40f3bceeb811c0ccf624be47a6d6308ca4c613",
+      "bytes": 4680
     }
   ]
 }

@@ -140,6 +140,55 @@ left alone. The task transition may be blocked only while a bounded graph reconc
 pending and only for the declared `claude-task-completed-v1` profile, with the same
 two-continuation loop guard and the same degrade-to-empty-and-diagnose behaviour.
 
+### A-016 — Implement Gemini AfterAgent adapter
+
+Add `adapters/gemini/hooks/graph_after_agent.py`. The adapter pins `gemini-after-agent-v1`,
+declares the host's own bounded `retry` decision and halt condition, and never reuses the
+Claude exit convention or another host's `{"decision": "block", "reason": ...}` payload shape.
+The effective retry bound is the smaller of the host-reported `retry_remaining` budget and the
+documented two-continuation cap, so a host that reports nothing cannot widen the bound. stdout
+carries exactly one strict JSON document and every diagnostic and log line goes to stderr, so a
+log line cannot corrupt the hook response.
+
+### A-017 — Implement Antigravity Stop adapter
+
+Add `adapters/antigravity/hooks/graph_stop.py`. The adapter pins `antigravity-stop-v1` and
+emits this host's documented `continue` decision with the reason carried alongside it; the
+canonical `block` action is mapped to `continue` and never to another host's block payload, and
+`block` is only used where the pinned version documents it. A bounded reconcile failure is
+`advisory` where the installed host reports no stop decision, a user interrupt is never
+force-continued, and the two-continuation loop guard and the degrade-to-empty-and-diagnose
+behaviour match the other adapters.
+
+### A-018 — Bound hook runtime and reconnect behaviour
+
+Add `adapters/common/hook_runtime.py`. One attempt runs under a wall-clock `timeout_ms` in an
+abandonable daemon worker, so a hung daemon call or a dead socket cannot hang completion
+indefinitely; the caller gets pending evidence naming the failure instead of an unanswered
+wait. Retries are capped by `max_retries` and by the documented `HARD_MAX_RETRIES = 2`, a crash
+is recorded as `crashed` pending evidence rather than propagated into the host's structured
+channel, and `bounded_budget` refuses a non-positive or unbounded budget instead of silently
+clamping it.
+
+### A-019 — Handle graph-unavailable fallback policy
+
+Add `adapters/common/degraded_policy.json`. The mode is explicit per repository and is never
+inherited: `axiom-graphd` and `axiom-mcp` are `strict` and return pending evidence while the
+graph is unverified, `axiom-skills` and `axiom-specs` are `advisory`, and an unknown repository
+falls back to an explicit non-fail-open `strict` default. Every degraded path reports
+`freshness: "unverified"` and `completion_gate: "not_claimed"`, so a fail-open decision never
+masquerades as verified graph freshness or as a completion gate that ran.
+
+### A-020 — Separate cancellation from completion
+
+Add `adapters/common/cancellation.md`. A user cancel, a shutdown and an error preserve durable
+dirty state without claiming a completion gate ran: the dirty scope is written to the durable
+hook state before exit, nothing is cleaned, reset, stashed or discarded, and no authority is
+widened by a cancelled turn. The machine-checkable record declares
+`dirty_state: "preserved"`, `durable: true`, `completion_gate: "not_run"`,
+`freshness: "unverified"`, `forced_continuation: false` and `resume_from: "dirty_scope"`, so a
+later run resumes from the preserved dirty scope instead of treating a cancel as completion.
+
 ### Tests
 
 Extend `tests/test_canonical_workflows.py` with positive contract checks for the nine canonical
@@ -163,6 +212,19 @@ guard, the reentrance flag and the managed markers, and each is replayed against
 fixture and a boundary fixture that removes one required rule. Each hook is run the way its host
 runs it, with JSON on stdin and an isolated loop-guard state directory, so block, cap,
 reentrance, interrupt, malformed-input, untrusted-profile and non-task-event behaviour are
-executed rather than described. The bundle is declared with 14 files across the `policy`,
+executed rather than described. The bundle is declared with 19 files across the `policy`,
 `skills` and `adapters` scopes, and the bytecode hygiene assertions keep a declared scope free
 of generated `__pycache__` content.
+
+The module also covers the two additional host hooks and the three shared adapter-common
+contracts. The Gemini AfterAgent hook is exercised for its documented retry decision, its halt
+path when the host budget is spent, its host-versus-adapter retry bound and its strict
+single-document stdout; the Antigravity Stop hook is exercised through a contract subclass that
+requires the host's documented `continue` decision, so a variant that reuses another host's
+`decision: block` payload is rejected. The bounded hook runtime is run for real: a daemon call
+that never answers must return pending evidence inside the budget, a crash must be recorded as
+pending evidence rather than raised, the retry cap must stop further attempts, and an unbounded
+budget must be refused. The degraded policy is checked for an explicit per-repository mode with
+unverified freshness and no claimed gate, and the cancellation contract is parsed from its
+shipped record, with negative and boundary variants that claim a gate ran, drop the resume
+requirement or discard the dirty state all rejected.

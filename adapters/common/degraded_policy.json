@@ -1,0 +1,76 @@
+{
+  "policy_version": 1,
+  "profile": "degraded-policy-v1",
+  "component": "axiom-skills",
+  "spec_version": "2.0.0-draft.1",
+  "description": "Per-repository degraded-mode policy for the Axiom completion hooks. The mode is explicit per repository and is never inherited from another repository; a degraded or fail-open decision is labelled unverified and never masquerades as verified graph freshness.",
+  "modes": {
+    "strict": "A pending graph reconcile is reportable as a bounded completion gate for this repository: the hook may ask the host to continue while the reported job is still pending, inside the documented two-continuation loop guard.",
+    "advisory": "A pending graph reconcile is advisory for this repository: the hook reports the pending job and lets the turn end, and claims no completion gate it cannot enforce."
+  },
+  "freshness_states": [
+    "fresh",
+    "unverified"
+  ],
+  "completion_gates": [
+    "bounded_verify",
+    "not_claimed"
+  ],
+  "invariants": {
+    "explicit_mode_required": true,
+    "fail_open_never_claims_fresh_freshness": true,
+    "fail_open_never_claims_a_completion_gate_ran": true,
+    "unknown_repo_is_not_fail_open": true
+  },
+  "unknown_repo": {
+    "mode": "strict",
+    "fail_open": false,
+    "on_unavailable": {
+      "action": "pending",
+      "freshness": "unverified",
+      "completion_gate": "not_claimed"
+    }
+  },
+  "repos": [
+    {
+      "repo": "axiom-graphd",
+      "mode": "strict",
+      "fail_open": false,
+      "on_unavailable": {
+        "action": "pending",
+        "freshness": "unverified",
+        "completion_gate": "not_claimed"
+      }
+    },
+    {
+      "repo": "axiom-mcp",
+      "mode": "strict",
+      "fail_open": false,
+      "on_unavailable": {
+        "action": "pending",
+        "freshness": "unverified",
+        "completion_gate": "not_claimed"
+      }
+    },
+    {
+      "repo": "axiom-skills",
+      "mode": "advisory",
+      "fail_open": true,
+      "on_unavailable": {
+        "action": "advisory",
+        "freshness": "unverified",
+        "completion_gate": "not_claimed"
+      }
+    },
+    {
+      "repo": "axiom-specs",
+      "mode": "advisory",
+      "fail_open": true,
+      "on_unavailable": {
+        "action": "advisory",
+        "freshness": "unverified",
+        "completion_gate": "not_claimed"
+      }
+    }
+  ]
+}
