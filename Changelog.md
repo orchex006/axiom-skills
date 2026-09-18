@@ -367,3 +367,40 @@ stay `policy`, `skills`, `adapters`; `templates/` is outside them).
 Not verified / not claimed: this manifest is content plus a local regression test only. No
 bootstrap, install or update was run against a real repository, no host adapter behaviour
 changed, and no release branch or tag was created.
+### V2-008 - Update namespace and ownership-aware templates
+
+Refine `templates/bootstrap/gitignore.fragment` so the managed `.gitignore` segment isolates
+the private native runtime state under the Axiom namespace while keeping the portable,
+human-owned and ownership content visible to Git. Every rule is scoped to `.axiom/`; no
+root-level pattern is added and the whole `.axiom/` directory is never ignored, so the portable
+configuration (`.axiom/config/solutions/*.json`), human annotations, the managed policy
+(`.axiom/agent/POLICY.md`), the human override (`.axiom/agent/POLICY.local.md`), the portable
+ownership file (`.axiom/agent/bootstrap.lock.json`) and the optional Git-reviewed checkpoints
+stay tracked and eligible for invalidation.
+
+The generated live/staging lanes and the local/tmp state are ignored as before, and the
+fragment now adds namespace-scoped rules for the private native runtime state that must never
+be committed: SQLite databases and their WAL/SHM/journal sidecars, lock and guard files and
+atomic temp files. An overbroad lock rule is rejected because it would swallow the portable
+ownership file, and changes under `.axiom/config/` or `.axiom/annotations/` remain tracked
+changes that invalidate the affected analysis inputs rather than being silently ignored.
+
+`templates/bootstrap/manifest.json` pins the fragment by SHA256 and byte count, so that pin is
+updated in the same commit as the fragment. `release/skills-manifest.json` is not modified:
+`templates/` is outside its declared `policy`, `skills`, `adapters` scopes and the fragment is
+not a declared bundle file, so `python release/verify_manifest.py` still accepts the
+twenty-file bundle.
+
+Add `tests/test_gitignore_fragment.py` with a targeted regression over the shipped fragment
+that runs the real `git check-ignore` in a throwaway repository, two negative fixtures (a
+fragment that ignores all of `.axiom/`, a fragment with unnamespaced root-level rules) that
+must be rejected, and four boundary fixtures (a fragment that leaks the private runtime state,
+an overbroad lock rule that swallows the ownership file, a broken managed marker, and an
+honest minimal fragment) stored as bytes for replay.
+
+Verified: `python -m pytest tests -q` -> 155 passed, exit 0; `python release/verify_manifest.py`
+-> OK files=20 scopes=policy,skills,adapters, exit 0.
+
+Not verified / not claimed: this is bootstrap content plus a local regression only. No
+bootstrap, install or update was run against a real repository, no host adapter behaviour
+changed, no daemon or live graph runtime was probed and no release branch or tag was created.

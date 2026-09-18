@@ -1,0 +1,4 @@
+# BEGIN axiom-graph generated runtime ignores
+.axiom/**/*.sqlite-wal
+.axiom/**/*.sqlite-shm
+.axiom/**/*.guard

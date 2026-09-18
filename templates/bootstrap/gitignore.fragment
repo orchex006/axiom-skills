@@ -1,7 +1,34 @@
 # BEGIN axiom-graph generated runtime ignores
+# Managed by the axiom-skills bootstrap engine. Every rule below is scoped to the
+# Axiom namespace (.axiom/): no root-level pattern is added and the whole .axiom/
+# directory is never ignored, so human and portable content stays visible to Git.
+# Generated live graph output and staging lanes: rebuilt artifacts, never a source.
 .axiom/graph/**/live/
 .axiom/graph/**/.staging/
+# Private native runtime state inside the namespace: the local bindings/state
+# pointer, per-worktree hook state and scratch files (not committed, not snapshotted).
 .axiom/local/
 .axiom/tmp/
-# Keep portable .axiom/config, annotations, agent policy and optional checkpoints tracked.
+# Private native runtime state: SQLite databases and their WAL/SHM/journal sidecars,
+# lock and guard files, and atomic temp files. Never committed; never a graph input.
+.axiom/**/*.sqlite
+.axiom/**/*.sqlite-wal
+.axiom/**/*.sqlite-shm
+.axiom/**/*.sqlite-journal
+.axiom/**/*.sqlite3
+.axiom/**/*.sqlite3-wal
+.axiom/**/*.sqlite3-shm
+.axiom/**/*.sqlite3-journal
+.axiom/**/*.lock
+.axiom/**/*.guard
+.axiom/**/*.tmp
+# Ownership boundary (tracked, never matched by this fragment):
+#   .axiom/config/solutions/*.json   portable configuration
+#   .axiom/annotations/**            human-owned graph inputs
+#   .axiom/agent/POLICY.md           managed policy
+#   .axiom/agent/POLICY.local.md     human override
+#   .axiom/agent/bootstrap.lock.json portable ownership/template hashes
+#   .axiom/graph/**/checkpoint/**    optional Git-reviewed snapshots
+# A tracked change under .axiom/config/ or .axiom/annotations/ invalidates the
+# affected analysis inputs; it is never silently ignored.
 # END axiom-graph generated runtime ignores
