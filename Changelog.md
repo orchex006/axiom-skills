@@ -247,3 +247,23 @@ probed installed version or host runtime evidence, a capability the host does no
 still claims a status, a test-evidence hash that no longer matches the shipped bytes, and an
 enforcement level raised above the evidence, while the shipped record keeps all four adapters
 uncertified and declared inside the bundle.
+
+### Governance — development contract, branch/merge/release policy
+
+Add `Development.md` for `axiom-skills`: repository identity and ownership boundaries, the
+preflight gate, required checks (`python -m pytest tests -q`), evidence and completion
+requirements, branch/merge/release policy, the rule that verified work finished in a worktree
+must reach the owner's primary checkout, commit/push rules, version/release policy and the
+definition of blocked.
+
+The contract records that `main` is the integration branch, `feature/<task-id>-<slug>` is the
+mandatory task branch and `release/vX.Y.Z` is the release branch. An agent MAY merge a verified
+task branch into `main` on its own authority once every merge-gate condition holds; release
+branches, tags and publishes still require explicit release authorization.
+
+It also records that a skill MUST NOT instruct an agent to bypass an applicable `AGENTS.md` or
+`Development.md`, and that bootstrap operations which manage governance must preserve
+human-owned instructions.
+
+Unverified statements: this contract is documentation only; no skill bundle or adapter behaviour
+changed in this entry.
