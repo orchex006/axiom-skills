@@ -1,0 +1,65 @@
+{
+  "manifest_version": 1,
+  "component": "axiom-skills",
+  "bundle": "axiom-bootstrap-content",
+  "bundle_version": "0.1.0-draft.1",
+  "spec_version": "2.0.0-draft.1",
+  "workspace_layout": 2,
+  "owner_repository": "axiom-skills",
+  "install_policy": {
+    "missing_template": "fail",
+    "hash_mismatch": "fail",
+    "byte_count_mismatch": "fail",
+    "duplicate_declaration": "fail",
+    "unmarked_managed_segment": "fail",
+    "second_policy_source": "fail",
+    "policy_source_count": 1,
+    "human_managed_content": "preserve",
+    "requires_explicit_human_approval": true
+  },
+  "human_owned": {
+    "rule": "Any byte outside the declared managed markers is human-owned and is never rewritten by a re-apply.",
+    "conflict_rule": "A managed segment whose bytes no longer match the pinned template's managed segment is reported as a conflict and is never silently replaced.",
+    "uninstall_rule": "Uninstall removes only unchanged managed segments and preserves every human-authored byte.",
+    "override_path": ".axiom/agent/POLICY.local.md"
+  },
+  "single_policy_source": {
+    "role": "policy",
+    "path": "policy/POLICY.md",
+    "installed_path": ".axiom/agent/POLICY.md",
+    "template_version": "2.0.0-draft.1",
+    "ownership": "managed-file",
+    "sha256": "96713d17e1e82dac2636dec746ed9ce5b57efd097e714ea119e59c061306133f",
+    "bytes": 5153
+  },
+  "templates": [
+    {
+      "id": "agents-block",
+      "role": "managed-agents-block",
+      "path": "templates/bootstrap/AGENTS.block.md",
+      "installed_path": "AGENTS.md",
+      "template_version": "2.0.0-draft.1",
+      "ownership": "managed-segment",
+      "managed_markers": {
+        "begin": "<!-- axiom-graph:begin -->",
+        "end": "<!-- axiom-graph:end -->"
+      },
+      "sha256": "39c2b714efbcfdf61f62ff60f43616254d4fb855c9babe0c2c871d1be4d06f5d",
+      "bytes": 314
+    },
+    {
+      "id": "gitignore-fragment",
+      "role": "managed-gitignore-fragment",
+      "path": "templates/bootstrap/gitignore.fragment",
+      "installed_path": ".gitignore",
+      "template_version": "2.0.0-draft.1",
+      "ownership": "managed-segment",
+      "managed_markers": {
+        "begin": "# BEGIN axiom-graph generated runtime ignores",
+        "end": "# END axiom-graph generated runtime ignores"
+      },
+      "sha256": "b2f9b6bf4588059b12e510a0422a1b815fb277bb70e5a592bc6a0ff13e2a49dd",
+      "bytes": 255
+    }
+  ]
+}
