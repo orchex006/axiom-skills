@@ -292,3 +292,25 @@ human-owned instructions.
 
 Unverified statements: this contract is documentation only; no skill bundle or adapter behaviour
 changed in this entry.
+
+### V2-003 — Publish canonical bootstrap content bundle
+
+Add `templates/bootstrap/manifest.json` as the machine-readable pin for the managed bootstrap
+content inside `axiom-skills`. `templates/bootstrap/AGENTS.block.md` and
+`templates/bootstrap/gitignore.fragment` are carried byte-exact from the `axiom-specs` repo seeds
+and pinned with SHA256, byte count, template version and role, and each declares the exact markers
+that bound the only bytes a re-apply may rewrite.
+
+The bundle ships no second policy copy: exactly one policy source, `policy/POLICY.md` (installed
+at `.axiom/agent/POLICY.md`), is referenced once, so the bootstrap engine consumes the canonical
+policy instead of a forked hardcoded copy. Human text outside the managed markers is preserved, a
+managed segment whose bytes no longer match the pinned template is reported as a conflict instead
+of being replaced, and the seeder `POLICY.md` from the seed set is deliberately not republished
+because it would be a duplicate policy text.
+
+Verified: `python -m pytest tests -q` and `python release/verify_manifest.py` (declared scopes
+stay `policy`, `skills`, `adapters`; `templates/` is outside them).
+
+Not verified / not claimed: this manifest is content plus a local regression test only. No
+bootstrap, install or update was run against a real repository, no host adapter behaviour
+changed, and no release branch or tag was created.

@@ -2254,5 +2254,304 @@ class AdapterManifestCoverageTests(unittest.TestCase):
         (cache / "graph_stop.cpython-311.pyc").write_bytes(b"\x00\x01\x02")
         problems = self.verifier_problems(root)
         self.assertTrue(any("unknown file inside a declared scope" in p for p in problems), problems)
+class BootstrapManifestChecks:
+    """V2-003 - canonical bootstrap content bundle.
+
+    The manifest pins the managed bootstrap templates by the real bytes they ship, declares the
+    markers that bound the only bytes a re-apply may rewrite, and declares exactly one policy
+    source. A second copy of the policy text inside the bundle is rejected so the bootstrap
+    engine can never install a forked policy, and a managed segment whose digest changed is a
+    reported conflict rather than a silent replacement.
+    """
+
+    SEMVER = re.compile(r"^\d+\.\d+\.\d+(?:-[0-9A-Za-z.\-]+)?$")
+    SHA256 = re.compile(r"^[0-9a-f]{64}$")
+    MANAGED_OWNERSHIPS = ("managed-segment", "managed-file")
+    POLICY_HEADER = "# Axiom Graph Policy"
+    REQUIRED_FAILURE_RULES = (
+        "missing_template",
+        "hash_mismatch",
+        "byte_count_mismatch",
+        "duplicate_declaration",
+        "unmarked_managed_segment",
+        "second_policy_source",
+    )
+
+    @classmethod
+    def declared(cls, manifest: dict) -> list[dict]:
+        """Every pinned entry: the templates plus the single policy source."""
+        entries = [e for e in (manifest.get("templates") or []) if isinstance(e, dict)]
+        source = manifest.get("single_policy_source")
+        if isinstance(source, dict) and source:
+            entries.append(source)
+        return entries
+
+    @classmethod
+    def policy_declarations(cls, manifest: dict) -> list[dict]:
+        """Every entry that claims to be the policy, however it is spelled."""
+        found: list[dict] = []
+        source = manifest.get("single_policy_source")
+        if isinstance(source, dict) and source:
+            found.append(source)
+        for entry in manifest.get("templates") or []:
+            if not isinstance(entry, dict):
+                continue
+            path = str(entry.get("path", ""))
+            if entry.get("role") == "policy" or Path(path).name.lower() == "policy.md":
+                found.append(entry)
+        return found
+
+    @classmethod
+    def check(cls, manifest: dict, root: Path) -> list[str]:
+        problems: list[str] = []
+        if manifest.get("component") != "axiom-skills":
+            problems.append("manifest does not declare the axiom-skills component")
+        if manifest.get("spec_version") != "2.0.0-draft.1":
+            problems.append("manifest does not declare the pinned spec version")
+        if not str(manifest.get("bundle", "")).strip():
+            problems.append("manifest does not declare a bundle identity")
+        if not cls.SEMVER.match(str(manifest.get("bundle_version", ""))):
+            problems.append("manifest does not declare a SemVer bundle version")
+        rules = manifest.get("install_policy")
+        if not isinstance(rules, dict):
+            problems.append("manifest does not declare an install policy")
+            rules = {}
+        for key in cls.REQUIRED_FAILURE_RULES:
+            if rules.get(key) != "fail":
+                problems.append(f"install policy must fail on {key}")
+        if rules.get("human_managed_content") != "preserve":
+            problems.append("install policy does not preserve human-managed content")
+        if rules.get("requires_explicit_human_approval") is not True:
+            problems.append("install policy does not require explicit human approval")
+        human = manifest.get("human_owned")
+        if not isinstance(human, dict):
+            problems.append("manifest does not declare the human-owned boundary")
+        else:
+            for key in ("rule", "conflict_rule", "uninstall_rule"):
+                if not str(human.get(key, "")).strip():
+                    problems.append(f"manifest does not state the human-owned {key}")
+        declarations = cls.policy_declarations(manifest)
+        if len(declarations) != 1:
+            problems.append(
+                f"manifest declares {len(declarations)} policy sources; exactly one is allowed"
+            )
+        elif declarations[0].get("role") != "policy":
+            problems.append("the single policy source does not declare the policy role")
+        ids: set[str] = set()
+        declared_paths: set[str] = set()
+        for entry in cls.declared(manifest):
+            rel = entry.get("path")
+            if not isinstance(rel, str) or not rel:
+                problems.append("manifest entry is missing a path")
+                continue
+            if rel in declared_paths:
+                problems.append(f"duplicate declaration fails install: {rel}")
+                continue
+            declared_paths.add(rel)
+            if "id" in entry:
+                entry_id = entry.get("id")
+                if not isinstance(entry_id, str) or not entry_id:
+                    problems.append(f"manifest entry has an empty id: {rel}")
+                elif entry_id in ids:
+                    problems.append(f"duplicate manifest id fails install: {entry_id}")
+                else:
+                    ids.add(entry_id)
+            if not str(entry.get("role", "")).strip():
+                problems.append(f"manifest entry has no role: {rel}")
+            if not cls.SEMVER.match(str(entry.get("template_version", ""))):
+                problems.append(f"manifest entry has no template version: {rel}")
+            if entry.get("ownership") not in cls.MANAGED_OWNERSHIPS:
+                problems.append(f"manifest entry has an unknown ownership: {rel}")
+            if not cls.SHA256.match(str(entry.get("sha256", ""))):
+                problems.append(f"manifest entry has no SHA256: {rel}")
+            if not isinstance(entry.get("bytes"), int) or entry.get("bytes") <= 0:
+                problems.append(f"manifest entry has no byte count: {rel}")
+            markers = entry.get("managed_markers")
+            if entry.get("ownership") == "managed-segment" and (
+                not isinstance(markers, dict)
+                or not str(markers.get("begin", "")).strip()
+                or not str(markers.get("end", "")).strip()
+            ):
+                problems.append(f"managed segment declares no markers: {rel}")
+            target = root / rel
+            if not target.is_file():
+                problems.append(f"declared template is missing: {rel}")
+                continue
+            data = target.read_bytes()
+            if entry.get("sha256") != hashlib.sha256(data).hexdigest():
+                problems.append(f"hash mismatch for declared template: {rel}")
+            if entry.get("bytes") != len(data):
+                problems.append(f"byte count mismatch for declared template: {rel}")
+            if entry.get("ownership") == "managed-segment" and isinstance(markers, dict):
+                for edge in ("begin", "end"):
+                    marker = markers.get(edge)
+                    if isinstance(marker, str) and marker:
+                        if data.count(marker.encode("utf-8")) != 1:
+                            problems.append(
+                                f"managed marker {edge} is not present exactly once: {rel}"
+                            )
+        templates_dir = root / "templates"
+        if templates_dir.exists():
+            for found in sorted(templates_dir.rglob("*")):
+                if not found.is_file():
+                    continue
+                if cls.POLICY_HEADER.encode("utf-8") in found.read_bytes():
+                    rel = found.relative_to(root).as_posix()
+                    problems.append(f"forked policy copy inside the bootstrap bundle: {rel}")
+        return problems
+
+
+def managed_span(text: str, begin: str, end: str) -> tuple[int, int] | None:
+    """Return the (start, stop) range of the managed segment, markers included.
+
+    ``None`` means the markers are missing, duplicated or out of order, so no re-apply may
+    guess an edit boundary. Text outside the returned range is human-owned.
+    """
+    if not begin or not end or text.count(begin) != 1 or text.count(end) != 1:
+        return None
+    start = text.index(begin)
+    stop = text.index(end) + len(end)
+    if stop <= start:
+        return None
+    return start, stop
+
+
+def reapply_managed_segment(
+    document: str, template: dict, template_text: str
+) -> tuple[str, list[str]]:
+    """Rewrite only the pinned managed segment; preserve every human-authored byte.
+
+    Returns the document unchanged with a reason when the markers are gone or the current
+    managed segment no longer matches the pinned digest: a changed managed segment is a
+    conflict to report, never an edit to overwrite.
+    """
+    markers = template.get("managed_markers") or {}
+    begin = str(markers.get("begin", ""))
+    end = str(markers.get("end", ""))
+    span = managed_span(document, begin, end)
+    if span is None:
+        return document, ["managed markers are missing or ambiguous; refusing to write"]
+    pinned = managed_span(template_text, begin, end)
+    if pinned is None:
+        return document, ["pinned template has no usable managed segment; refusing to write"]
+    start, stop = span
+    current = document[start:stop].encode("utf-8")
+    expected = template_text[pinned[0]:pinned[1]].encode("utf-8")
+    if current != expected:
+        return document, ["managed segment digest mismatch; report a conflict instead of replacing"]
+    return document[:start] + expected.decode("utf-8") + document[stop:], []
+
+
+class BootstrapManifestTests(unittest.TestCase):
+    """V2-003 - canonical bootstrap content bundle inside axiom-skills."""
+
+    def manifest(self) -> dict:
+        return json.loads(read("templates/bootstrap/manifest.json"))
+
+    def stage_bundle(
+        self,
+        extra: str | None = None,
+        mutate: str | None = None,
+        duplicate_policy: bool = False,
+    ):
+        root = Path(tempfile.mkdtemp(prefix="axiom-bootstrap-bundle-"))
+        self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+        manifest = self.manifest()
+        for entry in BootstrapManifestChecks.declared(manifest):
+            rel = entry["path"]
+            data = (ROOT / rel).read_bytes()
+            if mutate and rel == mutate:
+                data = data + b"\n<!-- injected -->\n"
+            target = root / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(data)
+        manifest_path = root / "templates" / "bootstrap" / "manifest.json"
+        manifest_path.parent.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        if duplicate_policy:
+            copy = root / "templates" / "bootstrap" / "POLICY.md"
+            copy.write_bytes((ROOT / "policy" / "POLICY.md").read_bytes())
+        if extra:
+            target = root / extra
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("undeclared\n", encoding="utf-8")
+        return root, manifest
+
+    def test_bootstrap_manifest_satisfies_contract(self):
+        self.assertEqual(BootstrapManifestChecks.check(self.manifest(), ROOT), [])
+
+    def test_bootstrap_manifest_pins_real_bytes_and_one_policy_source(self):
+        manifest = self.manifest()
+        for entry in BootstrapManifestChecks.declared(manifest):
+            data = (ROOT / entry["path"]).read_bytes()
+            self.assertEqual(hashlib.sha256(data).hexdigest(), entry["sha256"], entry["path"])
+            self.assertEqual(len(data), entry["bytes"], entry["path"])
+        declarations = BootstrapManifestChecks.policy_declarations(manifest)
+        self.assertEqual(len(declarations), 1)
+        self.assertEqual(declarations[0]["path"], "policy/POLICY.md")
+        # AC1: the bundle ships no second policy copy of its own.
+        self.assertFalse((ROOT / "templates" / "bootstrap" / "POLICY.md").exists())
+        shipped = json.loads(read("release/skills-manifest.json"))
+        policy_paths = [e["path"] for e in shipped["files"] if e.get("role") == "policy"]
+        self.assertEqual(policy_paths, ["policy/POLICY.md"])
+
+    def test_positive_reapply_preserves_human_text_outside_the_markers(self):
+        entry = self.manifest()["templates"][0]
+        template_text = read(entry["path"])
+        document = (
+            "# Human AGENTS notes\n\n" + template_text + "\n## More human notes\nkeep me\n"
+        )
+        result, problems = reapply_managed_segment(document, entry, template_text)
+        self.assertEqual(problems, [])
+        self.assertEqual(result, document)
+        self.assertIn("# Human AGENTS notes", result)
+        self.assertIn("## More human notes", result)
+
+    def test_negative_second_policy_copy_inside_the_bundle_is_rejected(self):
+        root, manifest = self.stage_bundle(duplicate_policy=True)
+        problems = BootstrapManifestChecks.check(manifest, root)
+        self.assertTrue(any("forked policy copy" in p for p in problems), problems)
+
+    def test_negative_duplicate_policy_declaration_is_rejected(self):
+        manifest = self.manifest()
+        manifest["templates"].append(
+            {
+                "id": "policy-copy",
+                "role": "policy",
+                "path": "templates/bootstrap/POLICY.md",
+                "template_version": "2.0.0-draft.1",
+                "ownership": "managed-file",
+                "sha256": manifest["single_policy_source"]["sha256"],
+                "bytes": manifest["single_policy_source"]["bytes"],
+            }
+        )
+        problems = BootstrapManifestChecks.check(manifest, ROOT)
+        self.assertTrue(any("exactly one is allowed" in p for p in problems), problems)
+
+    def test_negative_manifest_with_a_modified_template_is_rejected(self):
+        root, manifest = self.stage_bundle(mutate="templates/bootstrap/AGENTS.block.md")
+        problems = BootstrapManifestChecks.check(manifest, root)
+        self.assertTrue(any("hash mismatch for declared template" in p for p in problems), problems)
+
+    def boundary_unmarked_document(self):
+        return "# .gitignore\nnode_modules/\ndist/\n"
+
+    def test_boundary_a_managed_segment_without_markers_is_rejected(self):
+        entry = self.manifest()["templates"][1]
+        document = self.boundary_unmarked_document()
+        result, problems = reapply_managed_segment(document, entry, read(entry["path"]))
+        self.assertEqual(result, document)
+        self.assertTrue(any("missing or ambiguous" in p for p in problems), problems)
+
+    def test_boundary_a_human_edit_inside_the_managed_segment_is_a_conflict(self):
+        entry = self.manifest()["templates"][0]
+        template_text = read(entry["path"])
+        edited = template_text.replace("Before graph-assisted", "Before I changed this")
+        self.assertNotEqual(edited, template_text)
+        document = "# Human notes\n\n" + edited + "\n"
+        result, problems = reapply_managed_segment(document, entry, template_text)
+        self.assertEqual(result, document)
+        self.assertTrue(any("report a conflict" in p for p in problems), problems)
+
 if __name__ == "__main__":
     unittest.main()
