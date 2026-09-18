@@ -248,6 +248,31 @@ still claims a status, a test-evidence hash that no longer matches the shipped b
 enforcement level raised above the evidence, while the shipped record keeps all four adapters
 uncertified and declared inside the bundle.
 
+### Delivery record — A-001 … A-021 integrated into `main`
+
+Record that the skills delivery chain is integrated into `main`, so the workspace owner can see
+what is finished without opening each branch. The earlier merges were made from the working
+checkout and pushed directly, which left no pull-request record in GitHub; this entry is the
+explicit integration record for that delivery.
+
+| Task group | Task branch (`feature/…`) | Branch tip SHA | Integrated into `main` by |
+| --- | --- | --- | --- |
+| A-001 – A-003 | `a-001-003-canonical-workflows` | `6874cb8` | `b5b9a3e` |
+| A-004 – A-006 | `a-004-006-canonical-workflows` | `581b855` | `b5b9a3e` |
+| A-007 – A-009 | `a-007-009-canonical-workflows` | `fea863d` | `b5b9a3e` |
+| A-010 – A-015 | `a-010-015-host-adapters-and-hooks` | `6d0c218` | `b5b9a3e` |
+| A-016 – A-020 | `a-016-020-hooks-and-common` | `f7052ea` | `b5b9a3e` |
+| A-021 | `a-021-compatibility-certification` | `5765ee6` | `b5b9a3e` |
+| governance contract | `governance-development-contract` | `f4dc5fd` | `26f66d2` |
+
+Verification recorded for the integrated state of `main`: `python -m pytest tests -q` reports
+`106 passed`, and `python release/verify_manifest.py` reports `OK` for the committed bundle bytes
+(component `axiom-skills`, version `0.1.0-draft.1`, 20 files).
+
+Not verified / not claimed: no host certification beyond `adapters/compatibility.json` was re-run
+for this entry, and no release branch or tag was created. The feature branches are intentionally
+kept so their history stays reviewable.
+
 ### Governance — development contract, branch/merge/release policy
 
 Add `Development.md` for `axiom-skills`: repository identity and ownership boundaries, the
