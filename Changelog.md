@@ -5,34 +5,6 @@ version; entries below are unreleased working-tree changes, not a published rele
 
 ## Unreleased
 
-### D-010 — Write AI batch and completion workflow guide
-
-Add `docs/guides/agent-workflow.md`, plus the targeted slice test
-`tests/test_agent_workflow_guide.py`. The guide documents how the six canonical graph skills
-and the bounded host hooks cooperate, and it grounds every runtime claim in an exact
-file+symbol: the shared budget in `adapters/common/hook_runtime.py` (`bounded_budget`,
-`_run_once`, `run_bounded`, `HARD_MAX_RETRIES`), the per-host block decisions and
-`MAX_FORCED_CONTINUATIONS` cap in `adapters/*/hooks/*.py`, the `cancellation-v1` contract in
-`adapters/common/cancellation.md`, the explicit per-repository modes in
-`adapters/common/degraded_policy.json`, and the certification limits in
-`adapters/compatibility.json`.
-
-The guide states the ownership boundary explicitly: there is no universal hard completion
-gate, no adapter is certified, a bounded timeout abandons a daemon worker rather than
-cancelling it, the pending path of the runtime returns `allow` rather than `block`, and a
-cancel preserves dirty state without claiming a gate. Behaviour the repository does not
-implement is listed as not guaranteed instead of being described as if it existed.
-
-The slice test asserts the guide exists, that every cited file+symbol resolves, that the
-documented timeout numbers match the shipped runtime, and that negative/boundary guide
-variants (a missing timeout section, an omitted "not guaranteed" section, a claimed universal
-gate, a citation to a missing symbol, a real file credited with the wrong symbol) are
-rejected. `python -m pytest tests -q` records 118 passed and
-`python release/verify_manifest.py` records OK for the committed bundle bytes.
-
-Not verified / not claimed: no host was installed or version-probed for this entry, so the
-adapter certification status does not change (`certified_adapters: 0`); the guide is
-documentation and changes no hook or skill behaviour.
 ### A-001 — Define minimal graph policy contract
 
 Add `policy/POLICY.md` as the canonical managed graph policy. It fixes the exact graph
@@ -346,3 +318,52 @@ differs after a redirect) that must be accepted. This slice adds no declared bun
 `release/skills-manifest.json` is unchanged: `docs/` and `tests/` stay outside the `policy`,
 `skills` and `adapters` hashed scopes, and `python release/verify_manifest.py` still accepts
 the twenty-file bundle.
+### D-010 — Write AI batch and completion workflow guide
+
+Add `docs/guides/agent-workflow.md`, plus the targeted slice test
+`tests/test_agent_workflow_guide.py`. The guide documents how the six canonical graph skills
+and the bounded host hooks cooperate, and it grounds every runtime claim in an exact
+file+symbol: the shared budget in `adapters/common/hook_runtime.py` (`bounded_budget`,
+`_run_once`, `run_bounded`, `HARD_MAX_RETRIES`), the per-host block decisions and
+`MAX_FORCED_CONTINUATIONS` cap in `adapters/*/hooks/*.py`, the `cancellation-v1` contract in
+`adapters/common/cancellation.md`, the explicit per-repository modes in
+`adapters/common/degraded_policy.json`, and the certification limits in
+`adapters/compatibility.json`.
+
+The guide states the ownership boundary explicitly: there is no universal hard completion
+gate, no adapter is certified, a bounded timeout abandons a daemon worker rather than
+cancelling it, the pending path of the runtime returns `allow` rather than `block`, and a
+cancel preserves dirty state without claiming a gate. Behaviour the repository does not
+implement is listed as not guaranteed instead of being described as if it existed.
+
+The slice test asserts the guide exists, that every cited file+symbol resolves, that the
+documented timeout numbers match the shipped runtime, and that negative/boundary guide
+variants (a missing timeout section, an omitted "not guaranteed" section, a claimed universal
+gate, a citation to a missing symbol, a real file credited with the wrong symbol) are
+rejected. `python -m pytest tests -q` records 118 passed and
+`python release/verify_manifest.py` records OK for the committed bundle bytes.
+
+Not verified / not claimed: no host was installed or version-probed for this entry, so the
+adapter certification status does not change (`certified_adapters: 0`); the guide is
+documentation and changes no hook or skill behaviour.
+### V2-003 — Publish canonical bootstrap content bundle
+
+Add `templates/bootstrap/manifest.json` as the machine-readable pin for the managed bootstrap
+content inside `axiom-skills`. `templates/bootstrap/AGENTS.block.md` and
+`templates/bootstrap/gitignore.fragment` are carried byte-exact from the `axiom-specs` repo seeds
+and pinned with SHA256, byte count, template version and role, and each declares the exact markers
+that bound the only bytes a re-apply may rewrite.
+
+The bundle ships no second policy copy: exactly one policy source, `policy/POLICY.md` (installed
+at `.axiom/agent/POLICY.md`), is referenced once, so the bootstrap engine consumes the canonical
+policy instead of a forked hardcoded copy. Human text outside the managed markers is preserved, a
+managed segment whose bytes no longer match the pinned template is reported as a conflict instead
+of being replaced, and the seeder `POLICY.md` from the seed set is deliberately not republished
+because it would be a duplicate policy text.
+
+Verified: `python -m pytest tests -q` and `python release/verify_manifest.py` (declared scopes
+stay `policy`, `skills`, `adapters`; `templates/` is outside them).
+
+Not verified / not claimed: this manifest is content plus a local regression test only. No
+bootstrap, install or update was run against a real repository, no host adapter behaviour
+changed, and no release branch or tag was created.
