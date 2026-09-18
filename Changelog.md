@@ -404,3 +404,32 @@ Verified: `python -m pytest tests -q` -> 155 passed, exit 0; `python release/ver
 Not verified / not claimed: this is bootstrap content plus a local regression only. No
 bootstrap, install or update was run against a real repository, no host adapter behaviour
 changed, no daemon or live graph runtime was probed and no release branch or tag was created.
+
+
+### V2-028 - Publish version-probed host setup guides
+
+Add `docs/host-compatibility.md`, the probing and compatibility-discipline companion to
+`docs/guides/hosts.md`. Every host example is marked `unverified` until the exact installed
+version was probed, the operating system was named, the surface was resolved, the protocol and
+adapter versions were pinned and a host runtime test artifact with its SHA256 exists; none of
+those hold in this environment, so every example stays unverified and every unexercised
+capability stays `not tested`. The guide records installed version, operating system, surface,
+protocol version, adapter version and enforcement level as independent compatibility
+dimensions, states that provider settings never override host permissions and that host
+approval stays authoritative, and inherits the axiom-skills component version instead of
+carrying an independent documentation version.
+
+Add `tests/test_host_compatibility.py` with a targeted regression over the shipped guide, drift
+checks that re-read `adapters/compatibility.json` and `docs/guides/hosts.md`, three negative
+fixtures (a host marked verified without a probed version, an affirmative provider-override
+claim, a self-declared documentation version) and three boundary fixtures (every host honestly
+unverified, a fully evidenced probed host, an unknown version left unverified) stored as bytes
+for replay.
+
+Verified: `python -m pytest tests -q` -> 172 passed, exit 0; `python release/verify_manifest.py`
+-> OK files=20 scopes=policy,skills,adapters, exit 0.
+
+Not verified / not claimed: no licensed host runtime was probed, so `certified_adapters` stays
+0 and no adapter is certified. A host executable located on a build machine is not a version
+probe and a documentation table is not a runtime test. `docs/` and `tests/` stay outside the
+hashed bundle scope, so `release/skills-manifest.json` is unchanged.
