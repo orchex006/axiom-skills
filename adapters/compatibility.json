@@ -1,0 +1,362 @@
+{
+  "record_version": 1,
+  "profile": "adapter-compatibility-v1",
+  "component": "axiom-skills",
+  "component_version": "0.1.0-draft.1",
+  "spec_version": "2.0.0-draft.1",
+  "as_of": "2026-09-17",
+  "scope": "Certification record for the host adapters shipped by axiom-skills. It records the declared host identity, the exact adapter version, the protocol version, the per-feature status and the in-repository test evidence for each adapter, and it separates 'documented' and 'in-repository tested' from 'certified on an installed host'. The specification-side host matrix lives in axiom-specs/compatibility/host-matrix.json; this file is the owner-repository declaration and does not replace it.",
+  "documentation_pointer": "axiom-specs/compatibility/host-matrix.json",
+  "enforcement_levels": [
+    "instructions_only",
+    "hook_verified",
+    "ci_verified"
+  ],
+  "feature_ids": [
+    "instructions",
+    "policy_read",
+    "skills",
+    "mcp_config",
+    "stop_hook",
+    "after_agent_hook",
+    "after_tool_hook",
+    "task_completed_hook",
+    "post_tool_use_hook"
+  ],
+  "feature_statuses": [
+    "declared",
+    "in_repository_tested",
+    "not_documented",
+    "verified_on_installed_host"
+  ],
+  "certification_rules": {
+    "requires_exact_installed_version": true,
+    "requires_tested_os": true,
+    "requires_protocol_version": true,
+    "requires_runtime_test_artifact_hash": true,
+    "documented_table_is_not_certification": true,
+    "in_repository_unit_test_is_not_host_certification": true,
+    "mock_or_cross_compile_is_not_certification": true,
+    "enforcement_level_must_not_exceed_evidence": true,
+    "undocumented_feature_must_not_claim_a_status": true
+  },
+  "certification_summary": {
+    "declared_adapters": 4,
+    "certified_adapters": 0,
+    "host_runtime_tests_run": 0,
+    "status": "documented_and_in_repository_tested_not_certified"
+  },
+  "certification_blocker": "No licensed host runtime was available in this environment, so no adapter is certified. Recording an adapter as certified requires a probed exact installed version, a tested operating system, a host runtime test artifact and its SHA256, and an enforcement level that the evidence supports; a documented capability table or an in-repository unit test is never accepted as host certification.",
+  "adapters": [
+    {
+      "adapter_id": "codex",
+      "host": "Codex CLI",
+      "surface": "cli",
+      "documented_sources": [
+        "S09",
+        "S10",
+        "S11"
+      ],
+      "documented_features": [
+        "instructions",
+        "policy_read",
+        "skills",
+        "mcp_config",
+        "stop_hook"
+      ],
+      "features": [
+        {
+          "feature": "instructions",
+          "status": "in_repository_tested",
+          "evidence": "adapters/codex/instructions.md"
+        },
+        {
+          "feature": "policy_read",
+          "status": "in_repository_tested",
+          "evidence": "adapters/codex/instructions.md"
+        },
+        {
+          "feature": "skills",
+          "status": "declared",
+          "evidence": "adapters/codex/instructions.md"
+        },
+        {
+          "feature": "mcp_config",
+          "status": "declared",
+          "evidence": "adapters/codex/instructions.md"
+        },
+        {
+          "feature": "stop_hook",
+          "status": "in_repository_tested",
+          "evidence": "adapters/codex/hooks/graph_stop.py"
+        },
+        {
+          "feature": "task_completed_hook",
+          "status": "not_documented",
+          "evidence": null
+        }
+      ],
+      "boundary_caveat": "A Stop continuation is not task-state completion for every event kind, and the hook JSON schema is version-specific; the adapter therefore declares the hook gate as instructions-only until an installed version is probed.",
+      "repository_test_evidence": [
+        {
+          "path": "adapters/codex/instructions.md",
+          "sha256": "7712b7672a4b1d2fe11d02b3d39fcae04406838b5ecf43686a992368ba3bc8bb",
+          "test_class": "CodexAdapterTests"
+        },
+        {
+          "path": "adapters/codex/hooks/graph_stop.py",
+          "sha256": "bc5e62750c96ee14c59c4c90fe21f73fdb68930c8b017d6021a41f58912e94ed",
+          "test_class": "CodexStopHookTests"
+        }
+      ],
+      "adapter_version": "0.1.0-draft.1",
+      "protocol_version": 1,
+      "version_probe": "not_run",
+      "installed_version": null,
+      "tested_os": [],
+      "host_runtime_evidence": [],
+      "enforcement_level": "instructions_only",
+      "certified": false,
+      "certification_blocker": "No installed Codex CLI version was probed on any operating system and no host runtime test artifact exists for this adapter, so it is recorded as documented and in-repository tested only. It is not certified and claims no hook gate.",
+      "installer_behaviour": {
+        "preserves_existing_host_configuration": true,
+        "uninstall_removes_only_owned_files": true
+      }
+    },
+    {
+      "adapter_id": "claude",
+      "host": "Claude Code",
+      "surface": "cli",
+      "documented_sources": [
+        "S12",
+        "S20"
+      ],
+      "documented_features": [
+        "instructions",
+        "policy_read",
+        "mcp_config",
+        "stop_hook",
+        "task_completed_hook"
+      ],
+      "features": [
+        {
+          "feature": "instructions",
+          "status": "in_repository_tested",
+          "evidence": "adapters/claude/instructions.md"
+        },
+        {
+          "feature": "policy_read",
+          "status": "in_repository_tested",
+          "evidence": "adapters/claude/instructions.md"
+        },
+        {
+          "feature": "mcp_config",
+          "status": "declared",
+          "evidence": "adapters/claude/instructions.md"
+        },
+        {
+          "feature": "stop_hook",
+          "status": "in_repository_tested",
+          "evidence": "adapters/claude/hooks/graph_stop.py"
+        },
+        {
+          "feature": "task_completed_hook",
+          "status": "in_repository_tested",
+          "evidence": "adapters/claude/hooks/graph_task_completed.py"
+        },
+        {
+          "feature": "after_agent_hook",
+          "status": "not_documented",
+          "evidence": null
+        }
+      ],
+      "boundary_caveat": "TaskCompleted applies to the host's task-update and agent-team contexts, not to every turn, and Stop is distinct from a user interrupt; the adapter declares the hook gate as instructions-only until an installed version is probed.",
+      "repository_test_evidence": [
+        {
+          "path": "adapters/claude/instructions.md",
+          "sha256": "586f87fe319106903db39ff4d7459a9b5b3bee37359fb3ba9517ca958979245f",
+          "test_class": "ClaudeAdapterTests"
+        },
+        {
+          "path": "adapters/claude/hooks/graph_stop.py",
+          "sha256": "bf57f0567943bfb3b3a3b332161c1b69e967cadfd7f05bab050b0a6aa2009d5d",
+          "test_class": "ClaudeStopHookTests"
+        },
+        {
+          "path": "adapters/claude/hooks/graph_task_completed.py",
+          "sha256": "3b8def3693a54f88375416c21afa13ff97d53ef9705f54f7226d497b4d55a23c",
+          "test_class": "ClaudeTaskCompletedHookTests"
+        }
+      ],
+      "adapter_version": "0.1.0-draft.1",
+      "protocol_version": 1,
+      "version_probe": "not_run",
+      "installed_version": null,
+      "tested_os": [],
+      "host_runtime_evidence": [],
+      "enforcement_level": "instructions_only",
+      "certified": false,
+      "certification_blocker": "No installed Claude Code version was probed on any operating system and no host runtime test artifact exists for this adapter, so it is recorded as documented and in-repository tested only. It is not certified and claims no hook gate.",
+      "installer_behaviour": {
+        "preserves_existing_host_configuration": true,
+        "uninstall_removes_only_owned_files": true
+      }
+    },
+    {
+      "adapter_id": "gemini",
+      "host": "Gemini CLI",
+      "surface": "cli",
+      "documented_sources": [
+        "S17",
+        "S18"
+      ],
+      "documented_features": [
+        "instructions",
+        "policy_read",
+        "mcp_config",
+        "after_agent_hook",
+        "after_tool_hook"
+      ],
+      "features": [
+        {
+          "feature": "instructions",
+          "status": "in_repository_tested",
+          "evidence": "adapters/gemini/instructions.md"
+        },
+        {
+          "feature": "policy_read",
+          "status": "in_repository_tested",
+          "evidence": "adapters/gemini/instructions.md"
+        },
+        {
+          "feature": "mcp_config",
+          "status": "declared",
+          "evidence": "adapters/gemini/instructions.md"
+        },
+        {
+          "feature": "after_agent_hook",
+          "status": "in_repository_tested",
+          "evidence": "adapters/gemini/hooks/graph_after_agent.py"
+        },
+        {
+          "feature": "after_tool_hook",
+          "status": "declared",
+          "evidence": "adapters/gemini/instructions.md"
+        },
+        {
+          "feature": "task_completed_hook",
+          "status": "not_documented",
+          "evidence": null
+        }
+      ],
+      "boundary_caveat": "The AfterAgent retry and halt policy is not Claude's exit or JSON semantics, so the Gemini hook keeps its own profile and retry mapping; the adapter declares the hook gate as instructions-only until an installed version is probed.",
+      "repository_test_evidence": [
+        {
+          "path": "adapters/gemini/instructions.md",
+          "sha256": "13bddc002f9bc0baf85e8e91b5d8ecb24af1bde10ceecd42e9d8b979899f473c",
+          "test_class": "GeminiAdapterTests"
+        },
+        {
+          "path": "adapters/gemini/hooks/graph_after_agent.py",
+          "sha256": "24473d21399a3d4e7bd0512fc358df927527e65e68eb87bb4e35a9580162e9c1",
+          "test_class": "GeminiAfterAgentHookTests"
+        }
+      ],
+      "adapter_version": "0.1.0-draft.1",
+      "protocol_version": 1,
+      "version_probe": "not_run",
+      "installed_version": null,
+      "tested_os": [],
+      "host_runtime_evidence": [],
+      "enforcement_level": "instructions_only",
+      "certified": false,
+      "certification_blocker": "No installed Gemini CLI version was probed on any operating system and no host runtime test artifact exists for this adapter, so it is recorded as documented and in-repository tested only. It is not certified and claims no hook gate.",
+      "installer_behaviour": {
+        "preserves_existing_host_configuration": true,
+        "uninstall_removes_only_owned_files": true
+      }
+    },
+    {
+      "adapter_id": "antigravity",
+      "host": "AGY / Antigravity",
+      "surface": "ide_and_cli",
+      "documented_sources": [
+        "S13",
+        "S14",
+        "S15",
+        "S16"
+      ],
+      "documented_features": [
+        "instructions",
+        "policy_read",
+        "skills",
+        "mcp_config",
+        "stop_hook",
+        "post_tool_use_hook"
+      ],
+      "features": [
+        {
+          "feature": "instructions",
+          "status": "in_repository_tested",
+          "evidence": "adapters/antigravity/instructions.md"
+        },
+        {
+          "feature": "policy_read",
+          "status": "in_repository_tested",
+          "evidence": "adapters/antigravity/instructions.md"
+        },
+        {
+          "feature": "skills",
+          "status": "declared",
+          "evidence": "adapters/antigravity/instructions.md"
+        },
+        {
+          "feature": "mcp_config",
+          "status": "declared",
+          "evidence": "adapters/antigravity/instructions.md"
+        },
+        {
+          "feature": "stop_hook",
+          "status": "in_repository_tested",
+          "evidence": "adapters/antigravity/hooks/graph_stop.py"
+        },
+        {
+          "feature": "post_tool_use_hook",
+          "status": "declared",
+          "evidence": "adapters/antigravity/instructions.md"
+        },
+        {
+          "feature": "after_agent_hook",
+          "status": "not_documented",
+          "evidence": null
+        }
+      ],
+      "boundary_caveat": "Antigravity ships as an IDE surface and a CLI surface with separate versions, configuration paths and hook behaviour, and the Stop hook's documented output is decision=continue; the adapter declares the hook gate as instructions-only until each surface's installed version is probed.",
+      "repository_test_evidence": [
+        {
+          "path": "adapters/antigravity/instructions.md",
+          "sha256": "b9fb8fb748503acba0586bd8fd38817636dadd6b59937c650ec941c48c67d525",
+          "test_class": "AntigravityAdapterTests"
+        },
+        {
+          "path": "adapters/antigravity/hooks/graph_stop.py",
+          "sha256": "e93e80ff4ea1ecfc57e84151f6d7a668b2d4568462b4852abcee71d3c482bf2b",
+          "test_class": "AntigravityStopHookTests"
+        }
+      ],
+      "adapter_version": "0.1.0-draft.1",
+      "protocol_version": 1,
+      "version_probe": "not_run",
+      "installed_version": null,
+      "tested_os": [],
+      "host_runtime_evidence": [],
+      "enforcement_level": "instructions_only",
+      "certified": false,
+      "certification_blocker": "No installed AGY / Antigravity version was probed on any operating system and no host runtime test artifact exists for this adapter, so it is recorded as documented and in-repository tested only. It is not certified and claims no hook gate.",
+      "installer_behaviour": {
+        "preserves_existing_host_configuration": true,
+        "uninstall_removes_only_owned_files": true
+      }
+    }
+  ]
+}

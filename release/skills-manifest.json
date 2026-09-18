@@ -1,0 +1,152 @@
+{
+  "manifest_version": 1,
+  "component": "axiom-skills",
+  "component_version": "0.1.0-draft.1",
+  "channel": "draft",
+  "released": false,
+  "spec_version": "2.0.0-draft.1",
+  "install_policy": {
+    "declared_scope": [
+      "policy",
+      "skills",
+      "adapters"
+    ],
+    "missing_files": "fail",
+    "hash_mismatch": "fail",
+    "byte_count_mismatch": "fail",
+    "unknown_files": "fail",
+    "duplicate_declaration": "fail",
+    "requires_explicit_human_approval": true,
+    "reference_verifier": "release/verify_manifest.py"
+  },
+  "host_capability_requirements": {
+    "skills_directory": "required",
+    "managed_agents_md": "required",
+    "mcp_query_service": "required",
+    "policy_read": "required",
+    "hook_support": "optional",
+    "minimum_host_protocol": 1
+  },
+  "files": [
+    {
+      "path": "policy/POLICY.md",
+      "role": "policy",
+      "sha256": "96713d17e1e82dac2636dec746ed9ce5b57efd097e714ea119e59c061306133f",
+      "bytes": 5153
+    },
+    {
+      "path": "skills/graph-context/SKILL.md",
+      "role": "skill",
+      "sha256": "7b62ed7fc0db9c407e3c87a27f5789d4da9774b7624dbf0795c7c5c9ad47b072",
+      "bytes": 3432
+    },
+    {
+      "path": "skills/graph-reconcile/SKILL.md",
+      "role": "skill",
+      "sha256": "fe30997c49637a3bba824374b36d7f4604189e6824d372ab6387cb22efd0d38d",
+      "bytes": 3635
+    },
+    {
+      "path": "skills/graph-impact/SKILL.md",
+      "role": "skill",
+      "sha256": "56d4cd787530cf07bf5eae473cb2e14d5e22ad76713d1e246fdfccae2392d3d2",
+      "bytes": 4489
+    },
+    {
+      "path": "skills/graph-checkpoint/SKILL.md",
+      "role": "skill",
+      "sha256": "acc44509ade81953cc4ac92028bf0722ba85366333cf104aa1a74edd618abb0f",
+      "bytes": 5821
+    },
+    {
+      "path": "skills/graph-doctor/SKILL.md",
+      "role": "skill",
+      "sha256": "34a2d9c0dc05671b59e3f3b25d26cbe5d7a267da0e1aaee2d979d73df79cc4c4",
+      "bytes": 5558
+    },
+    {
+      "path": "skills/graph-update/SKILL.md",
+      "role": "skill",
+      "sha256": "51bfccb938717ecc73e029979f25fa4c88223be187dce10e081e24b54bb94696",
+      "bytes": 5535
+    },
+    {
+      "path": "adapters/codex/instructions.md",
+      "role": "host-adapter",
+      "sha256": "7712b7672a4b1d2fe11d02b3d39fcae04406838b5ecf43686a992368ba3bc8bb",
+      "bytes": 4528
+    },
+    {
+      "path": "adapters/claude/instructions.md",
+      "role": "host-adapter",
+      "sha256": "586f87fe319106903db39ff4d7459a9b5b3bee37359fb3ba9517ca958979245f",
+      "bytes": 5525
+    },
+    {
+      "path": "adapters/gemini/instructions.md",
+      "role": "host-adapter",
+      "sha256": "13bddc002f9bc0baf85e8e91b5d8ecb24af1bde10ceecd42e9d8b979899f473c",
+      "bytes": 5022
+    },
+    {
+      "path": "adapters/antigravity/instructions.md",
+      "role": "host-adapter",
+      "sha256": "b9fb8fb748503acba0586bd8fd38817636dadd6b59937c650ec941c48c67d525",
+      "bytes": 5205
+    },
+    {
+      "path": "adapters/codex/hooks/graph_stop.py",
+      "role": "host-hook",
+      "sha256": "bc5e62750c96ee14c59c4c90fe21f73fdb68930c8b017d6021a41f58912e94ed",
+      "bytes": 11558
+    },
+    {
+      "path": "adapters/claude/hooks/graph_stop.py",
+      "role": "host-hook",
+      "sha256": "bf57f0567943bfb3b3a3b332161c1b69e967cadfd7f05bab050b0a6aa2009d5d",
+      "bytes": 12581
+    },
+    {
+      "path": "adapters/claude/hooks/graph_task_completed.py",
+      "role": "host-hook",
+      "sha256": "3b8def3693a54f88375416c21afa13ff97d53ef9705f54f7226d497b4d55a23c",
+      "bytes": 12218
+    },
+    {
+      "path": "adapters/gemini/hooks/graph_after_agent.py",
+      "role": "host-hook",
+      "sha256": "24473d21399a3d4e7bd0512fc358df927527e65e68eb87bb4e35a9580162e9c1",
+      "bytes": 12850
+    },
+    {
+      "path": "adapters/antigravity/hooks/graph_stop.py",
+      "role": "host-hook",
+      "sha256": "e93e80ff4ea1ecfc57e84151f6d7a668b2d4568462b4852abcee71d3c482bf2b",
+      "bytes": 12919
+    },
+    {
+      "path": "adapters/common/hook_runtime.py",
+      "role": "host-hook-runtime",
+      "sha256": "f77ce2d9479ecccf308bb5f1e794ac0239ab4480758bc0f5ab727f10a95f4fdd",
+      "bytes": 8877
+    },
+    {
+      "path": "adapters/common/degraded_policy.json",
+      "role": "host-hook-policy",
+      "sha256": "92125d9958f7b12ba84072e716d4b307c2124370cb3ba892773e6c0d55472a0a",
+      "bytes": 2326
+    },
+    {
+      "path": "adapters/common/cancellation.md",
+      "role": "host-hook-contract",
+      "sha256": "596ae4dd9acccd4eee8d65623e40f3bceeb811c0ccf624be47a6d6308ca4c613",
+      "bytes": 4680
+    },
+    {
+      "path": "adapters/compatibility.json",
+      "role": "host-adapter-compatibility",
+      "sha256": "41b43840a24f80db6a3686f001d69f6b5b3c94a0c7bb98a7bd0466b416998f5d",
+      "bytes": 13508
+    }
+  ]
+}
