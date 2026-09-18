@@ -292,3 +292,29 @@ human-owned instructions.
 
 Unverified statements: this contract is documentation only; no skill bundle or adapter behaviour
 changed in this entry.
+
+### D-008 — Write host setup guides
+
+Add `docs/guides/hosts.md`, the operator guide for wiring the Axiom graph workflow into Codex
+CLI, Claude Code, Gemini CLI and Antigravity (AGY). For each host it records the
+version-specific instruction file and discovery scope, the native MCP configuration field
+names, and the hook events with the exact host output decision the shipped adapter emits
+(`codex-stop-v1`, `claude-stop-v1`, `claude-task-completed-v1`, `gemini-after-agent-v1`,
+`antigravity-stop-v1`). It restates the explicit `.axiom/agent/POLICY.md` read rule that a
+link to the policy is not evidence, the loop guard, the cancellation contract and the degraded
+policy, and it keeps all four adapters uncertified: `adapters/compatibility.json` still
+declares `certified_adapters: 0` because no licensed host runtime was probed.
+
+The guide's certification links are the retrieved host-documentation URLs from
+`axiom-specs/research/SOURCES.md` (S09-S20). Each returned HTTP 200 on 2026-09-18 with its
+cited token present in the decoded body; the raw retrieval log is preserved as D-008 evidence.
+No URL is presented as host certification, and no fabricated link is used.
+
+Add `tests/test_hosts_guide.py` with a targeted regression over the shipped guide, drift checks
+that re-read the shipped hook adapters and the compatibility record, two negative fixtures (a
+fabricated certification URL and a missing host) that must be rejected, and two boundary
+fixtures (every link honestly marked pending, and an allowlisted source URL whose final URL
+differs after a redirect) that must be accepted. This slice adds no declared bundle file, so
+`release/skills-manifest.json` is unchanged: `docs/` and `tests/` stay outside the `policy`,
+`skills` and `adapters` hashed scopes, and `python release/verify_manifest.py` still accepts
+the twenty-file bundle.
