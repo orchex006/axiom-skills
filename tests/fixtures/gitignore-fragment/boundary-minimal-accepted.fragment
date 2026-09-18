@@ -1,0 +1,12 @@
+# BEGIN axiom-graph generated runtime ignores
+.axiom/graph/**/live/
+.axiom/graph/**/.staging/
+.axiom/local/
+.axiom/tmp/
+.axiom/**/*.sqlite
+.axiom/**/*.sqlite-wal
+.axiom/**/*.sqlite-shm
+.axiom/**/*.sqlite-journal
+.axiom/**/*.guard
+.axiom/**/*.tmp
+# END axiom-graph generated runtime ignores
