@@ -341,6 +341,7 @@ documented timeout numbers match the shipped runtime, and that negative/boundary
 variants (a missing timeout section, an omitted "not guaranteed" section, a claimed universal
 gate, a citation to a missing symbol, a real file credited with the wrong symbol) are
 rejected. `python -m pytest tests -q` records 140 passed on the integrated branch and
+rejected. `python -m pytest tests -q` records 118 passed and
 `python release/verify_manifest.py` records OK for the committed bundle bytes.
 
 Not verified / not claimed: no host was installed or version-probed for this entry, so the
