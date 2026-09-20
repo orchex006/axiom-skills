@@ -4,9 +4,11 @@ Reusable Agent Skills, host adapters and the managed-item policy for the Axiom
 Graph Ecosystem. Specification baseline: `2.0.0-draft.1`, component version
 `0.1.0-draft.1` (channel `draft`, `released: false`).
 
-**Owner scope:** the six graph workflow skills, the per-host adapters that wire
-the graph completion gate into a host, the shared bounded hook runtime, the
-managed-item policy, and the bootstrap templates that `axiom-graphd` applies.
+**Owner scope:** the eight Agent Skills (the six graph workflow skills plus the
+ecosystem installation skill and the distributed-CLI provisioning skill), the
+per-host adapters that wire the graph completion gate into a host, the shared
+bounded hook runtime, the managed-item policy, and the bootstrap templates that
+`axiom-graphd` applies.
 
 It does **not** own the graph runtime (`axiom-graphd`), the query gateway
 (`axiom-mcp`) or the ecosystem contracts (`axiom-specs`). The canonical template
@@ -18,13 +20,15 @@ guard semantics change in `axiom-specs` first.
 
 ```text
 policy/POLICY.md          managed-item policy, least privilege, degraded operation
-skills/                   six Agent Skills, one SKILL.md each
+skills/                   eight Agent Skills, one SKILL.md each
   graph-context           read the graph for the task at hand
   graph-impact            bound the change surface before editing
   graph-reconcile         request and follow a bounded reconcile
   graph-checkpoint        record a checkpoint with its evidence
   graph-doctor            diagnose the graph service and its prerequisites
   graph-update            check and delegate one approved update plan
+  graph-install           provision the ecosystem in the contract order and report honestly
+  axiom-cli-install       tier-aware install/update/doctor/uninstall through the distributed entrypoint
 adapters/                 per-host adapters (see the host table below)
   common/hook_runtime.py  shared bounded runtime: wall-clock budget, retry cap, pending evidence
   common/degraded_policy.json   per-repository strict/advisory mode
