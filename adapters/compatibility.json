@@ -2,7 +2,7 @@
   "record_version": 1,
   "profile": "adapter-compatibility-v1",
   "component": "axiom-skills",
-  "component_version": "0.1.0-draft.1",
+  "component_version": "0.1.0",
   "spec_version": "2.0.0-draft.1",
   "as_of": "2026-09-17",
   "scope": "Certification record for the host adapters shipped by axiom-skills. It records the declared host identity, the exact adapter version, the protocol version, the per-feature status and the in-repository test evidence for each adapter, and it separates 'documented' and 'in-repository tested' from 'certified on an installed host'. The specification-side host matrix lives in axiom-specs/compatibility/host-matrix.json; this file is the owner-repository declaration and does not replace it.",
@@ -109,7 +109,7 @@
           "test_class": "CodexStopHookTests"
         }
       ],
-      "adapter_version": "0.1.0-draft.1",
+      "adapter_version": "0.1.0",
       "protocol_version": 1,
       "version_probe": "not_run",
       "installed_version": null,
@@ -188,7 +188,7 @@
           "test_class": "ClaudeTaskCompletedHookTests"
         }
       ],
-      "adapter_version": "0.1.0-draft.1",
+      "adapter_version": "0.1.0",
       "protocol_version": 1,
       "version_probe": "not_run",
       "installed_version": null,
@@ -262,7 +262,7 @@
           "test_class": "GeminiAfterAgentHookTests"
         }
       ],
-      "adapter_version": "0.1.0-draft.1",
+      "adapter_version": "0.1.0",
       "protocol_version": 1,
       "version_probe": "not_run",
       "installed_version": null,
@@ -344,7 +344,7 @@
           "test_class": "AntigravityStopHookTests"
         }
       ],
-      "adapter_version": "0.1.0-draft.1",
+      "adapter_version": "0.1.0",
       "protocol_version": 1,
       "version_probe": "not_run",
       "installed_version": null,

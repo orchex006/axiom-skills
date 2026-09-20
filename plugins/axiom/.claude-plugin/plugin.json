@@ -1,6 +1,6 @@
 {
   "name": "axiom",
-  "version": "0.1.0-draft.1",
+  "version": "0.1.0",
   "description": "Axiom graph skills for repository analysis and operations",
   "author": {
     "name": "orchex006"

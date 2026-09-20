@@ -2,7 +2,7 @@
 
 Reusable Agent Skills, host adapters and the managed-item policy for the Axiom
 Graph Ecosystem. Specification baseline: `2.0.0-draft.1`, component version
-`0.1.0-draft.1` (channel `draft`, `released: false`).
+`0.1.0` (experimental unsigned release; host certification remains pending).
 
 **Owner scope:** the eight Agent Skills (the six graph workflow skills plus the
 ecosystem installation skill and the distributed-CLI provisioning skill), the

@@ -5,6 +5,13 @@ version; entries below are unreleased working-tree changes, not a published rele
 
 ## Unreleased
 
+### 0.1.0 experimental Windows release
+
+Set the component, adapter and portable plugin versions to `0.1.0`. This first
+release is unsigned and does not certify installed Codex, Claude, Gemini or
+Antigravity host versions. The plugin packages skills and policy; Axiom runtime
+installation and MCP configuration remain separate.
+
 ### Portable plugin package and host marketplaces
 
 Added one `plugins/axiom` skill package with Codex, Claude Code, Gemini CLI and
