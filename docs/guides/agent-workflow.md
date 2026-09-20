@@ -93,9 +93,13 @@ Two properties matter for workflow design:
 ## 3. Block behaviour: per-host, opt-in, and bounded by a loop guard
 
 A *block* is a canonical action (`ACTIONS = ("allow", "continue", "block", "advisory")` in
-`hook_runtime.py`), but only some hosts can express it. Each adapter maps the canonical result
-to that host's documented schema; one host's decision payload is never copied into another
-host's schema.
+`hook_runtime.py`), and **every supported adapter can express it**. Each adapter maps the
+canonical result into its own host's documented decision shape - `{"decision": "block"}` on
+Codex CLI and Claude Code, `{"decision": "retry"}` on Gemini CLI and `{"decision": "continue"}`
+on Antigravity (AGY) - so no supported host is left without the gate. What is **not** shared is
+the shape: one host's decision payload is never copied into another host's schema, and a
+capability flag that the installed version reports as `False` degrades the canonical decision to
+`advisory` instead of forcing a payload that host cannot express.
 
 | Adapter | Hook | Block gate | Host output when canonical `block` |
 |---|---|---|---|

@@ -5,6 +5,42 @@ version; entries below are unreleased working-tree changes, not a published rele
 
 ## Unreleased
 
+### Repository entry point, governance file and host-parity clarity (W10-C)
+`README.md` was a **0-byte file**, `AGENTS.md` did not exist at all, `docs/README.md` did not
+exist and `spec.lock.json` was absent, so the bundle had no entry point, no repository
+governance file and no verified specification pin. `AGENTS.md` is restored byte-for-byte from
+the published seed `axiom-specs/repo-seeds/axiom-skills/AGENTS.md`, which is the same
+governance text `axiom-mcp` ships, so the workspace `AGENTS.md` §2 requirement that every
+component repository carry root agent instructions is satisfied again. `README.md` now states
+the owner scope (the six skills, the per-host adapters, the shared bounded hook runtime, the
+managed-item policy and the bootstrap templates - and explicitly not the graph runtime, the
+query gateway or the ecosystem contracts), the repository layout, the two required checks
+with the manifest-regeneration rule for changes under `policy/`, `skills/` or `adapters/`, the
+unapproved-draft nature of the specification pin, the fail-closed install policy and the
+platform status. `docs/README.md` indexes the three shipped guides and points at the
+authoritative records (`adapters/compatibility.json`, `policy/POLICY.md`,
+`release/skills-manifest.json`). `spec.lock.json` pins the immutable `axiom-specs` revision
+`6b23ea78e19902726edf40dbd9c15bda27c91ebb` plus five contract digests
+(`contracts/version-dimensions.json`, `contracts/normative-terms.md`,
+`contracts/bootstrap-ownership.md`, `contracts/repository-ownership.json`,
+`contracts/schemas/task-evidence.schema.json`) and their canonical rollup; default mode is
+`ACCEPTED` (exit 0) and `--release` deliberately still rejects with
+`release-coverage-missing:conformance/fixture-index.json`.
+`docs/guides/agent-workflow.md` §3 said "only some hosts can express it" about the canonical
+`block` action, which reads as though some supported host is left without the gate. Every
+adapter maps the canonical decision into its own host's documented shape - `block` on Codex CLI
+and Claude Code, `retry` on Gemini CLI, `continue` on Antigravity (AGY) - so the section now
+says all four can express it and keeps the parts that really do differ: the shape is not
+interchangeable, a capability flag the installed version reports as `False` degrades the
+decision to `advisory`, and a host with no equivalent event records the feature as
+`not_documented` rather than inventing a hook (Gemini CLI documents no task-completion event;
+Antigravity documents no `AfterAgent` event). Neither adapter lacks its host's documented
+completion gate, so no adapter behaviour, no `adapters/compatibility.json` record and no
+hash-pinned file under `policy/`, `skills/` or `adapters/` changed in this entry - which is why
+`release/skills-manifest.json` is deliberately not regenerated. Recorded and not claimed: no
+host version was probed, `certified_adapters` stays `0`, `enforcement_level` stays
+`instructions_only`, no tag or release exists, and the host matrix still records
+`installed_version: null` for all four hosts.
 ### A-001 — Define minimal graph policy contract
 
 Add `policy/POLICY.md` as the canonical managed graph policy. It fixes the exact graph
