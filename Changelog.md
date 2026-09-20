@@ -5,6 +5,20 @@ version; entries below are unreleased working-tree changes, not a published rele
 
 ## Unreleased
 
+### README specification-pin validator invocation (W10-READMES)
+
+`README.md` §"Specification pin" documented `python tools/spec-lock-check.py --lock
+spec.lock.json --spec-root <axiom-specs-checkout>`, but `axiom-skills` ships no `tools/`
+directory; the validator is canonical in `axiom-specs` (`tools/spec-lock-check.py`, flags
+`--lock`, `--spec-root`, `--release` and `--json`). Run as written from this checkout the
+command failed with `[Errno 2] No such file or directory` and exit 2. The section now names the
+canonical owner and gives the invocation that runs from an `axiom-specs` checkout
+(`--lock ../axiom-skills/spec.lock.json --spec-root .`); both documented outcomes were re-verified
+against the pinned revision `6b23ea78e19902726edf40dbd9c15bda27c91ebb` - default mode prints
+`immutable revision and pinned digests verified` and exits 0, and `--release` is rejected with
+`release-coverage-missing:conformance/fixture-index.json` and exits 2. README-only change: no file
+under `policy/`, `skills/` or `adapters/` changed, so `release/skills-manifest.json` is
+unaffected.
 ### Repository entry point, governance file and host-parity clarity (W10-C)
 `README.md` was a **0-byte file**, `AGENTS.md` did not exist at all, `docs/README.md` did not
 exist and `spec.lock.json` was absent, so the bundle had no entry point, no repository

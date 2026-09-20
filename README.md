@@ -110,10 +110,12 @@ reviewed against, plus a SHA256 digest for each contract it consumes. It is an
 **unapproved draft pin**: no released specification revision exists, so the pin is
 not owner approval and carries no release coverage.
 
-Validate the pin offline against a checkout of the pinned content:
+Validate the pin offline. The validator is canonical in `axiom-specs`
+(`tools/spec-lock-check.py`) and is not shipped in this bundle, so run it from an
+`axiom-specs` checkout and point `--lock` at this repository's `spec.lock.json`:
 
 ```bash
-python tools/spec-lock-check.py --lock spec.lock.json --spec-root <axiom-specs-checkout>
+python tools/spec-lock-check.py --lock ../axiom-skills/spec.lock.json --spec-root .
 ```
 
 Default mode must accept (`immutable revision and pinned digests verified`).
