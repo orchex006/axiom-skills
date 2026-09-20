@@ -470,3 +470,45 @@ Not verified / not claimed: no licensed host runtime was probed, so `certified_a
 0 and no adapter is certified. A host executable located on a build machine is not a version
 probe and a documentation table is not a runtime test. `docs/` and `tests/` stay outside the
 hashed bundle scope, so `release/skills-manifest.json` is unchanged.
+
+### I-006 / J-010 - Add the ecosystem provisioning and distributed-CLI skills
+
+Add `skills/graph-install/SKILL.md` (I-006), the AI provisioning skill. It reads the installation
+contract (`axiom-specs/contracts/ecosystem-installation-contract.md`, contract version 1) and the
+end-to-end installation guide as the authority, declares its dependencies and its bundle metadata
+from `release/skills-manifest.json`, probes every declared prerequisite with
+`axiom doctor --all --json` and stops when a prerequisite is unsatisfied or unknown or its version
+source is `undeclared`, installs strictly in the contract order (core release, gateway, then
+bundle) through the declared `axiom install plan` / `axiom install apply` verbs behind one
+approved plan digest, verifies each component with the documented command, hands off to the host
+wiring guide (`docs/guides/hosts.md`), and reports partial or unverified steps as partial or
+unverified rather than complete. It points at the contract and does not restate it as its own
+authority.
+
+Add `skills/axiom-cli-install/SKILL.md` (J-010), the tier-aware provisioning skill for the
+distributed entrypoint. It reads the dependency table and the release tiers from the distribution
+contract (`axiom-specs/contracts/axiom-cli-distribution-contract.md`) before installing anything,
+drives install, update, doctor, version and uninstall only through `axiom-cli`/`axiom-cli.exe`,
+refuses a platform the contract does not declare, records the target it actually executed, treats
+the WSL2 lane as Linux evidence and never as Windows evidence, reports every target it could not
+exercise as unverified, and ends at the same recorded verification result the Human path produces.
+It extends and does not replace `graph-install`.
+
+Both skill files are declared in `release/skills-manifest.json` with role `skill` and their SHA256
+and byte counts: `skills/` is a declared install scope, so an undeclared file inside it fails
+install and the manifest must be regenerated in the same change. `README.md` now states eight
+Agent Skills and lists both. `tests/test_canonical_workflows.py` gains `GraphInstallChecks`,
+`AxiomCliInstallChecks` and their positive, negative and boundary tests, the two host-drift guards
+that pinned the bundle at 20 files are updated to the new 22-file bundle, and a manifest test
+asserts both provisioning skills are declared.
+
+Verified: `python -m pytest tests -q` -> 183 passed, exit 0; `python release/verify_manifest.py`
+-> OK files=22 scopes=policy,skills,adapters, exit 0.
+
+Not verified / not claimed: the `axiom` operator verbs are not built on the current `axiom-graphd`
+revision and answer `NOT_READY` with exit 4, and the `uninstall` verb is recorded `undeclared` by
+the installation contract, so neither skill executed an end-to-end install; the install, update
+and uninstall legs stay unverified/unbuilt rather than working, and no version, URL, digest or
+result is invented. The distribution contract certifies no platform and publishes no released
+artifact and no `channels/stable.json` manifest, so no target is `certified: true` and the
+`axiom-cli` legs stay unverified. No host was probed.

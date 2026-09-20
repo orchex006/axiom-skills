@@ -589,6 +589,158 @@ class GraphUpdateChecks:
         return problems
 
 
+class GraphInstallChecks:
+    """I-006 - AI provisioning skill for the ecosystem installation path.
+
+    The skill reads the installation contract, probes every declared prerequisite before any
+    write, installs in the contract order, hands off to host wiring and reports an unbuilt or
+    unverified step as unbuilt or unverified. It points at the contract as the authority and
+    never restates it as its own.
+    """
+
+    CONTRACT_MARKER = "The installation contract is the authority for this path:"
+    READ_ORDER_MARKER = "Read the contract before anything else."
+    PROBE_MARKER = "Probe before any write, and stop on an unsatisfied or unknown prerequisite."
+    INSTALL_ORDER_MARKER = "Install in the contract order, and only that order."
+    HANDOFF_MARKER = "Hand off to host wiring."
+    REPORT_MARKER = "report a step the agent could not execute as partial or unverified"
+    COMMANDS = (
+        "axiom doctor --all --json",
+        "axiom install plan",
+        "axiom install apply",
+        "axiom version --all --json",
+        "axiom host detect --json",
+    )
+    ORDER = ("axiom-graphd", "axiom-mcp", "axiom-skills")
+    UNTRUSTED_INPUTS = ("readme", "task description", "commit message")
+
+    @classmethod
+    def check(cls, text: str) -> list[str]:
+        problems: list[str] = []
+        meta = frontmatter(text)
+        if meta.get("name") != "graph-install":
+            problems.append("frontmatter name is missing or wrong")
+        if not meta.get("description"):
+            problems.append("frontmatter description is missing")
+        if cls.CONTRACT_MARKER not in text:
+            problems.append("skill does not point at the installation contract as the authority")
+        if cls.READ_ORDER_MARKER not in text:
+            problems.append("skill does not read the contract before acting")
+        for command in cls.COMMANDS:
+            if command not in text:
+                problems.append(f"skill never names the {command} command")
+        if cls.PROBE_MARKER not in text:
+            problems.append("skill does not probe the prerequisites before any write")
+        if cls.INSTALL_ORDER_MARKER not in text:
+            problems.append("skill does not install in the contract order")
+        order_at = text.find(cls.INSTALL_ORDER_MARKER)
+        if order_at == -1:
+            order_at = 0
+        positions = [text.find(component, order_at) for component in cls.ORDER]
+        if -1 in positions or positions != sorted(positions):
+            problems.append("skill does not state the core, gateway then bundle install order")
+        if cls.HANDOFF_MARKER not in text:
+            problems.append("skill does not hand off to host wiring")
+        flat = flatten(text)
+        if cls.REPORT_MARKER not in flat:
+            problems.append("skill does not report partial or unverified steps as partial or unverified")
+        if "undeclared" not in flat:
+            problems.append("skill does not treat an undeclared value as undeclared")
+        if "never invent" not in flat:
+            problems.append("skill does not forbid inventing a version, a URL or a command")
+        if "not restate the contract as its own authority" not in flat:
+            problems.append("skill restates the contract as its own authority")
+        if "not yet built" not in flat and "not_ready" not in flat:
+            problems.append("skill does not state the current not-ready state honestly")
+        if "must never claim a completed installation" not in flat:
+            problems.append("skill does not forbid claiming an unverified installation")
+        if "approval_stale" not in flat:
+            problems.append("skill does not bind apply to the approved plan digest")
+        if "release/skills-manifest.json" not in text:
+            problems.append("skill does not carry the manifest bundle metadata")
+        if "0.1.0-draft.1" not in text or "2.0.0-draft.1" not in text:
+            problems.append("skill does not carry the bundle version metadata")
+        for source in cls.UNTRUSTED_INPUTS:
+            if source not in flat:
+                problems.append(f"skill does not list the {source} as an untrusted install input")
+        return problems
+
+
+class AxiomCliInstallChecks:
+    """J-010 - tier-aware provisioning of the distributed axiom-cli entrypoint."""
+
+    CONTRACT_MARKER = "The distribution contract is the authority:"
+    DEPENDENCY_MARKER = "Read the dependency table and the release tiers before you install anything."
+    DECLARED_TARGET_MARKER = "Refuse to install on a target the contract does not declare"
+    ENTRYPOINT_MARKER = "Probe and drive every verb through the distributed entrypoint only."
+    WSL_MARKER = "Treat the WSL2 lane as Linux evidence only."
+    CERTIFY_MARKER = "Record certification state and never promote a tier."
+    PLATFORMS = (
+        "windows-x64",
+        "macos-x64",
+        "container-linux-x64",
+        "linux-x64",
+        "macos-arm64",
+        "wsl2-linux-x64",
+    )
+    COMMANDS = ("axiom-cli install", "axiom-cli doctor", "axiom-cli version")
+    VERBS = ("install", "update", "doctor", "version", "uninstall")
+    FORBIDDEN = ("elevation", "bash", "wsl", "docker", "node.js")
+
+    @classmethod
+    def check(cls, text: str) -> list[str]:
+        problems: list[str] = []
+        meta = frontmatter(text)
+        if meta.get("name") != "axiom-cli-install":
+            problems.append("frontmatter name is missing or wrong")
+        if not meta.get("description"):
+            problems.append("frontmatter description is missing")
+        if cls.CONTRACT_MARKER not in text:
+            problems.append("skill does not point at the distribution contract as the authority")
+        if "skills/graph-install/SKILL.md" not in text:
+            problems.append("skill does not declare that it extends the ecosystem install skill")
+        flat = flatten(text)
+        if cls.DEPENDENCY_MARKER not in text:
+            problems.append("skill does not read the dependency table and tiers before installing")
+        if "channels/stable.json" not in text:
+            problems.append("skill does not name the recorded update manifest")
+        for platform in cls.PLATFORMS:
+            if platform not in text:
+                problems.append(f"skill does not name the declared platform {platform}")
+        if cls.DECLARED_TARGET_MARKER not in text:
+            problems.append("skill does not refuse an undeclared target")
+        if cls.ENTRYPOINT_MARKER not in text:
+            problems.append("skill does not drive every verb through the distributed entrypoint")
+        for command in cls.COMMANDS:
+            if command not in text:
+                problems.append(f"skill never names the {command} command")
+        for verb in cls.VERBS:
+            if verb not in flat:
+                problems.append(f"skill does not drive the {verb} verb")
+        if cls.WSL_MARKER not in text:
+            problems.append("skill does not treat the WSL2 lane as Linux evidence")
+        if "windows evidence" not in flat:
+            problems.append("skill does not forbid recording WSL2 as Windows evidence")
+        if cls.CERTIFY_MARKER not in text:
+            problems.append("skill does not record certification state")
+        if "certified: true" not in text or "certified: false" not in text:
+            problems.append("skill does not distinguish the certification states")
+        if "unverified" not in flat:
+            problems.append("skill does not use the unverified state")
+        if "undeclared-pending" not in flat:
+            problems.append("skill does not record an undeclared version as undeclared-pending")
+        if "not restate it as its own authority" not in flat:
+            problems.append("skill restates the distribution contract as its own authority")
+        for item in cls.FORBIDDEN:
+            if item not in flat:
+                problems.append(f"skill does not cover the forbidden prerequisite {item}")
+        if "does not require bash, docker, node.js or elevation" not in flat:
+            problems.append("skill does not state the no-bash/docker/node/elevation rule")
+        if "not_ready" not in flat or "exit 4" not in text:
+            problems.append("skill does not record the current not-ready state")
+        return problems
+
+
 class SkillsManifestChecks:
     """A-008 - canonical policy/skill package manifest."""
 
@@ -768,6 +920,107 @@ class GraphUpdateSkillTests(unittest.TestCase):
         self.assertTrue(any("not sequenced after" in p for p in problems), problems)
 
 
+class GraphInstallSkillTests(unittest.TestCase):
+    """I-006 - AI provisioning skill for the ecosystem installation path."""
+
+    def test_skill_satisfies_contract(self):
+        self.assertEqual(GraphInstallChecks.check(read("skills/graph-install/SKILL.md")), [])
+
+    def test_skill_probes_before_writing_and_installs_in_order(self):
+        text = read("skills/graph-install/SKILL.md")
+        probe_at = text.find(GraphInstallChecks.PROBE_MARKER)
+        install_at = text.find(GraphInstallChecks.INSTALL_ORDER_MARKER)
+        self.assertNotEqual(probe_at, -1)
+        self.assertNotEqual(install_at, -1)
+        self.assertLess(probe_at, install_at)
+        self.assertIn("axiom install plan", text)
+        self.assertIn("axiom install apply --plan", text)
+
+    def test_negative_skill_that_claims_a_completed_installation_is_rejected(self):
+        fixture = (
+            "---\n"
+            "name: graph-install\n"
+            "description: Install the Axiom ecosystem automatically.\n"
+            "---\n\n"
+            "Run the installer for every component, skip the probe when the host looks modern,\n"
+            "and report the installation as complete when the downloads finish.\n"
+        )
+        problems = GraphInstallChecks.check(fixture)
+        self.assertTrue(any("partial or unverified" in p for p in problems), problems)
+        self.assertTrue(any("does not probe" in p for p in problems), problems)
+        self.assertTrue(any("not-ready state" in p for p in problems), problems)
+
+    def test_boundary_skill_without_the_host_handoff_is_rejected(self):
+        text = read("skills/graph-install/SKILL.md")
+        mutated = text.replace(GraphInstallChecks.HANDOFF_MARKER, "Continue with the install")
+        problems = GraphInstallChecks.check(mutated)
+        self.assertTrue(any("hand off to host wiring" in p for p in problems), problems)
+
+    def test_boundary_skill_that_installs_the_bundle_before_the_core_is_rejected(self):
+        text = read("skills/graph-install/SKILL.md")
+        marker_at = text.find(GraphInstallChecks.INSTALL_ORDER_MARKER)
+        self.assertNotEqual(marker_at, -1)
+        head = text[:marker_at]
+        tail = (
+            GraphInstallChecks.INSTALL_ORDER_MARKER
+            + "\n\nInstall position 1 `axiom-skills`, then position 2 `axiom-mcp`, then "
+            + "position 3 `axiom-graphd`.\n"
+        )
+        problems = GraphInstallChecks.check(head + tail)
+        self.assertTrue(
+            any("core, gateway then bundle install order" in p for p in problems), problems
+        )
+
+
+class AxiomCliInstallSkillTests(unittest.TestCase):
+    """J-010 - tier-aware provisioning of the distributed axiom-cli entrypoint."""
+
+    def test_skill_satisfies_contract(self):
+        self.assertEqual(AxiomCliInstallChecks.check(read("skills/axiom-cli-install/SKILL.md")), [])
+
+    def test_skill_reads_the_contract_before_installing(self):
+        text = read("skills/axiom-cli-install/SKILL.md")
+        read_at = text.find(AxiomCliInstallChecks.DEPENDENCY_MARKER)
+        install_at = text.find("`axiom-cli install` installs or")
+        self.assertNotEqual(read_at, -1)
+        self.assertNotEqual(install_at, -1)
+        self.assertLess(read_at, install_at)
+
+    def test_negative_skill_that_installs_on_an_undeclared_platform_is_rejected(self):
+        fixture = (
+            "---\n"
+            "name: axiom-cli-install\n"
+            "description: Install axiom-cli everywhere.\n"
+            "---\n\n"
+            "Read the dependency table and the release tiers before you install anything.\n"
+            "Run `axiom-cli install` on whatever platform the host happens to be, then report\n"
+            "the install as passing and record the run as Windows evidence.\n"
+        )
+        problems = AxiomCliInstallChecks.check(fixture)
+        self.assertTrue(any("undeclared target" in p for p in problems), problems)
+        self.assertTrue(any("distributed entrypoint" in p for p in problems), problems)
+        self.assertTrue(any("WSL2 lane as Linux evidence" in p for p in problems), problems)
+
+    def test_negative_skill_that_promotes_every_tier_is_rejected(self):
+        fixture = (
+            "---\n"
+            "name: axiom-cli-install\n"
+            "description: Promote every declared platform.\n"
+            "---\n\n"
+            "Present every design-complete, test-later platform as finish-first and mark each\n"
+            "platform `certified: true` before any evidence exists.\n"
+        )
+        problems = AxiomCliInstallChecks.check(fixture)
+        self.assertTrue(any("certification states" in p for p in problems), problems)
+        self.assertTrue(any("record certification state" in p for p in problems), problems)
+
+    def test_boundary_skill_that_drops_the_wsl_evidence_rule_is_rejected(self):
+        text = read("skills/axiom-cli-install/SKILL.md")
+        mutated = text.replace(AxiomCliInstallChecks.WSL_MARKER, "Handle the WSL2 lane")
+        problems = AxiomCliInstallChecks.check(mutated)
+        self.assertTrue(any("WSL2 lane as Linux evidence" in p for p in problems), problems)
+
+
 class SkillsManifestTests(unittest.TestCase):
     """A-008 - canonical policy/skill package manifest."""
 
@@ -806,6 +1059,12 @@ class SkillsManifestTests(unittest.TestCase):
         for entry in manifest["files"]:
             self.assertTrue((ROOT / entry["path"]).is_file(), entry["path"])
             self.assertEqual(len(entry["sha256"]), 64)
+
+    def test_manifest_declares_the_provisioning_skills(self):
+        manifest = self.manifest()
+        paths = {entry["path"] for entry in manifest["files"]}
+        self.assertIn("skills/graph-install/SKILL.md", paths)
+        self.assertIn("skills/axiom-cli-install/SKILL.md", paths)
 
     def test_negative_manifest_with_an_undeclared_file_is_rejected(self):
         root, manifest = self.stage_bundle(extra="skills/graph-context/EXTRA.md")

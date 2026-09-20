@@ -71,6 +71,18 @@
       "bytes": 5535
     },
     {
+      "path": "skills/graph-install/SKILL.md",
+      "role": "skill",
+      "sha256": "54bf9b32e04465bf6423226e4894979b271754252d9a5f55804c8b546aeb79a7",
+      "bytes": 9766
+    },
+    {
+      "path": "skills/axiom-cli-install/SKILL.md",
+      "role": "skill",
+      "sha256": "672a181c436db08361f294ec5aca7960816a4244c9d5746fb1ad69109f7bce23",
+      "bytes": 10712
+    },
+    {
       "path": "adapters/codex/instructions.md",
       "role": "host-adapter",
       "sha256": "7712b7672a4b1d2fe11d02b3d39fcae04406838b5ecf43686a992368ba3bc8bb",
