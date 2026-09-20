@@ -44,6 +44,25 @@ Windows) and the per-platform artifact of the target. Where a version, a URL, a 
 signature is not defined by an owner repository or manifest, it is recorded as **undeclared** and
 is never invented.
 
+### Resolving an authority revision
+
+Both named authorities live in `axiom-specs`, and this repository pins that surface in
+`spec.lock.json`. Resolve every named authority at an immutable revision and record the revision you
+resolved; a reference read from a moving ref such as `main`, `HEAD` or a tag alias is not a resolved
+authority.
+
+1. read the pin from `spec.lock.json` (`spec_revision`) and check that the authority exists there:
+   `git -C <axiom-specs> cat-file -e <pin>:contracts/axiom-cli-distribution-contract.md`;
+2. when the pin does not contain an authority this skill names, record `authority-absent-at-pin`
+   with that exact command and its exit code, then resolve the authority at the newest immutable
+   revision of `axiom-specs` that does contain it and record that revision sha in the report. The
+   distribution contract and the `axiom-cli` distribution guide are both newer than the pin
+   currently recorded in `spec.lock.json`, so this branch is the expected one today;
+3. when an authority cannot be resolved at any immutable revision, stop: report the path as
+   unresolved and refuse the install. Do not work from memory, from a directory listing or from an
+   earlier session's copy, and do not advance `spec.lock.json` yourself - a pin that is older than
+   an authority this skill needs is a governance finding to report, not a local edit to make.
+
 ## Procedure
 
 1. **Read the dependency table and the release tiers before you install anything.** From the
@@ -108,6 +127,19 @@ is never invented.
    over the same installed revisions). Report per target: executed or unverified, the artifact
    versions with their sha256, the certification state, and every leg this run could not exercise.
 
+## Case outcomes
+
+Exercise these four cases and record one verdict line per case. A verdict is one of `passed`,
+`refused`, `unverified` or `not_run`; only a case that actually ran on this host may be `passed`,
+and a case the host cannot perform is `not_run` with its exact command and its exit code.
+
+| Case | Shape | Required recorded outcome |
+|---|---|---|
+| positive | the host is a declared delivery target and the entrypoint is present: `windows-x64` on Windows, `macos-x64` on macOS, `container-linux-x64` in the published container | drive `install`, `update`, `doctor`, `version` and `uninstall` through the entrypoint and record the per-verb result; a verb that answers `NotReady` with exit code 4 is recorded as `unverified` for that leg, never as `passed`, and the run does not become a completed installation |
+| declared but not yet verified | a target the contract declares that this host is not: `linux-x64`, `macos-arm64` or `wsl2-linux-x64` | `unverified` with its tier (`design-complete-test-later`), its `certified: false` state and the reason no native execution record exists; a `wsl2-linux-x64` run is recorded as `linux-x64` evidence |
+| undeclared platform | an os/arch pair no delivery platform declares, for example `windows-arm64` or `linux-arm64` | `refused` by name before any write; record the observed os and arch and the ids the contract does declare |
+| missing mandatory dependency | a prerequisite the contract marks mandatory is absent or unknown on this host: the Rust toolchain, the Python interpreter or the SQLite driver | `refused` by name before any write, naming the prerequisite and its `mandatory: yes` row; a non-mandatory row (`nodejs`, `wsl`, `docker`, `bash`) never refuses an install |
+
 ## Forbidden set
 
 On a platform this contract declares native, an installation path must not require administrator or
@@ -121,8 +153,9 @@ Node.js or elevation on a supported host.
 The distribution is a normative contract, not a published artifact: the contract's non-goals state
 that it does not certify any platform, publish any artifact, define a signing service, create a
 release or authorize a push. Where the owner repository has not yet built a verb, the entrypoint
-answers `NotReady` with a stated reason and must not return an empty success envelope; the
-`axiom-graphd` operator verbs currently answer `NOT_READY` and exit 4. Until the distributed
+answers `NotReady` with a stated reason and must not return an empty success envelope; at the
+`axiom-graphd` revision this skill was verified against (`3599dfb`) the operator verbs answer
+`NOT_READY` and exit 4 rather than reporting a success. Until the distributed
 release, its per-user installers, its container image and its `channels/stable.json` manifest exist
 and a native execution record exists, no target is `certified: true`, this skill cannot complete an
 install, and every install, update and uninstall leg must be reported **unverified** with the
@@ -150,6 +183,9 @@ rows with their mandatory and elevation state, the target id actually executed w
 architecture, the tier and certification state, the per-component artifacts with versions and
 sha256, the channel manifest used, the per-target verification result, and every unverified or
 unbuilt leg with the concrete reason and an actionable next step or an explicit blocked report.
+It also records the resolved authority revision and the pin state (`present` or
+`authority-absent-at-pin` with the failing command and its exit code), and one verdict line for each
+of the four cases above.
 
 ## Fallback
 

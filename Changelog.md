@@ -512,3 +512,65 @@ and uninstall legs stay unverified/unbuilt rather than working, and no version, 
 result is invented. The distribution contract certifies no platform and publishes no released
 artifact and no `channels/stable.json` manifest, so no target is `certified: true` and the
 `axiom-cli` legs stay unverified. No host was probed.
+
+### J-010 — Resolve the distribution authority, and check the skill against the real contract
+
+The tier-aware provisioning skill named its two `axiom-specs` authorities by path only, so an agent
+following the pin could not resolve either one. `spec.lock.json` pins
+`6b23ea78e19902726edf40dbd9c15bda27c91ebb`, and
+`git -C <axiom-specs> cat-file -e 6b23ea78e19902726edf40dbd9c15bda27c91ebb:contracts/axiom-cli-distribution-contract.md`
+exits `128` because the contract was added later by the J-001 specification commit `f8f5885`; the
+same probe for `repo-seeds/axiom-cli/docs/30-DISTRIBUTION-AND-INSTALLERS.md` also exits `128`. That
+is a real defect and it is recorded as one rather than papered over. The skill now states the
+resolution rule: read the pin from `spec.lock.json`, probe the authority with that exact command,
+record `authority-absent-at-pin` with the exit code, then resolve the authority at the newest
+immutable revision of `axiom-specs` that contains it and record that sha in the report. It states
+explicitly that it does not advance `spec.lock.json` itself, because a pin older than an authority
+the skill needs is a governance finding to report and not a local edit to make, and it refuses when
+an authority resolves at no immutable revision.
+
+The skill also gains the four case outcomes the task card names — positive, declared but not yet
+verified, undeclared platform, and a dependency the host is missing — each with the verdict it must
+record (`passed`, `refused`, `unverified` or `not_run`), and its report now carries the resolved
+authority revision and the pin state. No version, URL, channel or command is added that no owner
+repository defines, and no host execution is claimed for a leg that did not run.
+
+`tests/test_canonical_workflows.py` gains `DistributionAuthorityResolver`,
+`DistributionAgreementChecks`, `AxiomCliDistributionAgreementTests` and
+`AxiomCliEntrypointSurfaceTests`, so the skill's claims are checked against the real contract and
+`compatibility/platform-matrix.json` bytes instead of against a restatement: the exact six-platform
+enumeration, the two tier sets and each platform's tier, the dependency table's mandatory and
+non-mandatory rows, the recorded `channels/stable.json` channel with its forbidden pins, the cited
+section numbers and their real titles, the `wsl2-linux-x64` to `linux-x64` evidence target, the
+all-false certification state, and the observed pin state. Negative and boundary variants that drop
+the authority-resolution rule, the pin-state record or the case matrix are rejected.
+
+Verified on Windows 11 x64 with the merged bytes: `python -m pytest tests -q` -> `197 passed`,
+exit 0 (was 183); `python -m pytest tests/test_canonical_workflows.py -q -k AxiomCli` -> `19 passed`,
+exit 0; `python release/verify_manifest.py` -> `OK ... files=22 scopes=policy,skills,adapters`,
+exit 0. `release/skills-manifest.json` is regenerated for `skills/axiom-cli-install/SKILL.md`
+(`10712` bytes / `672a181c436db08361f294ec5aca7960816a4244c9d5746fb1ad69109f7bce23` ->
+`14120` bytes / `b21a0c94434fcc77db9547f53ae9a3406c971b9aae49b22f87e9045a6597e3f0`). The real
+contract read for the agreement checks is `axiom-specs` `contracts/axiom-cli-distribution-contract.md`
+SHA256 `cd0759410e89ec1e1a9e6059108f344d0655a07a80a7c9d7e41df1562b48d3b1` (`11096` bytes) with
+`compatibility/platform-matrix.json`.
+
+The first real entrypoint run in this repository: `axiom-cli.exe` from the `axiom-cli` build
+(`target/debug`, `221696` bytes, SHA256
+`20945e2c4183333fe3e7369016afe10a138b17941ae6b715e98cccd14bab0ccc`) answers `--help` with exit 0 and
+advertises all five contract verbs, while `version --all --json`, `doctor --all --json`,
+`install --dry-run --json`, `uninstall --dry-run --json` and `update check --all --json` each answer
+the `not_ready` envelope with exit code `4`. The positive case is therefore recorded `unverified`,
+never `passed`, and the run does not become a completed installation. This entry supersedes the
+"No host was probed" note of the I-006/J-010 entry above, which was accurate for that change.
+
+Not verified / not claimed: no install, update, doctor or uninstall leg completed, because no
+released artifact, no per-user installer and no `channels/stable.json` manifest exist and no target
+is `certified: true`; `where axiom-cli` and `where axiom` both exit `1` on this host, so the
+entrypoint is not on `PATH` and the build above was invoked by path. `linux-x64`, `macos-arm64` and
+`wsl2-linux-x64` were not executed — there is no macOS host and no native Linux host — so they stay
+`unverified` at their `design-complete-test-later` tier, and `windows-x64` is not certified by a run
+on one machine. The Rust toolchain, the Python interpreter, the SQLite driver, `node` and `wsl` all
+probe present on this host, so the missing-mandatory-dependency refusal leg could not be exercised
+and is recorded `not_run` rather than `passed`. The stale `spec.lock.json` pin is reported here and
+left for the owner; this repository did not re-pin it.

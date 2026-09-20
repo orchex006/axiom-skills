@@ -79,8 +79,8 @@
     {
       "path": "skills/axiom-cli-install/SKILL.md",
       "role": "skill",
-      "sha256": "672a181c436db08361f294ec5aca7960816a4244c9d5746fb1ad69109f7bce23",
-      "bytes": 10712
+      "sha256": "b21a0c94434fcc77db9547f53ae9a3406c971b9aae49b22f87e9045a6597e3f0",
+      "bytes": 14120
     },
     {
       "path": "adapters/codex/instructions.md",
