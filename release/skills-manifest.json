@@ -1,9 +1,9 @@
 {
   "manifest_version": 1,
   "component": "axiom-skills",
-  "component_version": "0.1.0-draft.1",
-  "channel": "draft",
-  "released": false,
+  "component_version": "0.1.0",
+  "channel": "experimental",
+  "released": true,
   "spec_version": "2.0.0-draft.1",
   "install_policy": {
     "declared_scope": [
@@ -77,8 +77,8 @@
     {
       "path": "skills/graph-install/SKILL.md",
       "role": "skill",
-      "sha256": "54bf9b32e04465bf6423226e4894979b271754252d9a5f55804c8b546aeb79a7",
-      "bytes": 9766
+      "sha256": "ec2aa790373c5e61c85f5edba437372c332caa0c6531899fce9653daf8d3d407",
+      "bytes": 9758
     },
     {
       "path": "skills/axiom-cli-install/SKILL.md",
@@ -161,26 +161,26 @@
     {
       "path": "adapters/compatibility.json",
       "role": "host-adapter-compatibility",
-      "sha256": "41b43840a24f80db6a3686f001d69f6b5b3c94a0c7bb98a7bd0466b416998f5d",
-      "bytes": 13508
+      "sha256": "e482901be645adc116bbc1d77ecbeb3e5fda6edfe1b5187a4c498887e914db1e",
+      "bytes": 13468
     },
     {
       "path": "plugins/axiom/.claude-plugin/plugin.json",
       "role": "plugin-package",
-      "sha256": "a6a3f3c09e849e4448939d890b17ea44fcd9004fdc25c16c0de77ab4e5be1670",
-      "bytes": 173
+      "sha256": "c1c784640f42aafc756a425eb8bd35daa70eb346780246c1c6734af2209a47b9",
+      "bytes": 165
     },
     {
       "path": "plugins/axiom/.codex-plugin/plugin.json",
       "role": "plugin-package",
-      "sha256": "21b1a82bee93fc0edb23d49d0874450f21c0377366ff33b75125ecc389a3b36f",
-      "bytes": 789
+      "sha256": "f7155bf2cc59854ffb9706b048c861a5fa8084db765ac89b754e8e857f0495e0",
+      "bytes": 781
     },
     {
       "path": "plugins/axiom/gemini-extension.json",
       "role": "plugin-package",
-      "sha256": "24173c7e07f9891acd90126926a80b0af0f815e1f21653032946677eb983e94c",
-      "bytes": 164
+      "sha256": "9715d2fc67bd7e3c8e9a545b6b9c6f48ba403c88349d9ee62b2dcd980bc63056",
+      "bytes": 156
     },
     {
       "path": "plugins/axiom/GEMINI.md",
@@ -239,8 +239,8 @@
     {
       "path": "plugins/axiom/skills/graph-install/SKILL.md",
       "role": "plugin-package",
-      "sha256": "54bf9b32e04465bf6423226e4894979b271754252d9a5f55804c8b546aeb79a7",
-      "bytes": 9766
+      "sha256": "ec2aa790373c5e61c85f5edba437372c332caa0c6531899fce9653daf8d3d407",
+      "bytes": 9758
     },
     {
       "path": "plugins/axiom/skills/graph-reconcile/SKILL.md",

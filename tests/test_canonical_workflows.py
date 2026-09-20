@@ -682,7 +682,8 @@ class GraphInstallChecks:
             problems.append("skill does not bind apply to the approved plan digest")
         if "release/skills-manifest.json" not in text:
             problems.append("skill does not carry the manifest bundle metadata")
-        if "0.1.0-draft.1" not in text or "2.0.0-draft.1" not in text:
+        manifest = json.loads((ROOT / "release" / "skills-manifest.json").read_text(encoding="utf-8"))
+        if manifest["component_version"] not in text or manifest["spec_version"] not in text:
             problems.append("skill does not carry the bundle version metadata")
         for source in cls.UNTRUSTED_INPUTS:
             if source not in flat:
