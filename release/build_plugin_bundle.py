@@ -11,7 +11,10 @@ PLUGIN = ROOT / "plugins" / "axiom"
 
 
 def source_files() -> list[Path]:
-    return [*sorted((ROOT / "skills").glob("*/SKILL.md")), ROOT / "policy" / "POLICY.md"]
+    return [
+        *sorted(path for path in (ROOT / "skills").rglob("*") if path.is_file()),
+        ROOT / "policy" / "POLICY.md",
+    ]
 
 
 def destination(source: Path, plugin: Path) -> Path:
@@ -33,6 +36,10 @@ def main() -> int:
     sources = source_files()
     if not sources or any(not path.is_file() for path in sources):
         print("FAIL canonical skill or policy source is missing")
+        return 1
+    skill_count = len(list((ROOT / "skills").glob("*/SKILL.md")))
+    if not skill_count:
+        print("FAIL canonical skills are missing")
         return 1
     expected = {destination(source, plugin) for source in sources}
     for source in sources:
@@ -56,7 +63,7 @@ def main() -> int:
         for path in errors:
             print(f"FAIL plugin bundle differs from canonical source: {path}")
         return 1
-    print(f"OK plugin bundle: {len(sources) - 1} skills and policy match canonical bytes")
+    print(f"OK plugin bundle: {skill_count} skills and policy match canonical bytes")
     return 0
 
 
