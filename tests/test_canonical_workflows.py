@@ -55,6 +55,30 @@ def flatten(text: str) -> str:
     return " ".join(text.split()).lower()
 
 
+def ancestor_directories() -> list[Path]:
+    """This checkout and every parent directory, nearest first.
+
+    The workspace holds independent repositories side by side and a worktree is nested inside it, so
+    a sibling checkout is looked up relative to each ancestor. Nothing is read unless it resolves.
+    """
+    return [ROOT, *ROOT.parents]
+
+
+def component_checkouts(names: tuple[str, ...]) -> list[Path]:
+    """Candidate directories that could hold one of the named component checkouts, nearest first.
+
+    A checkout is looked for next to each ancestor, next to the workspace that holds the sibling
+    worktrees and inside that worktrees directory. A candidate is only used when it actually holds
+    the file being asked for, so an authority is never invented from a path that does not resolve.
+    """
+    found: list[Path] = []
+    for base in ancestor_directories():
+        for holder in (base, base / "axiom", base / "axiom-worktrees"):
+            for name in names:
+                found.append(holder / name)
+    return found
+
+
 class GraphPolicyChecks:
     """Reusable checks so the same rules can be replayed against negative fixtures."""
 
@@ -686,6 +710,19 @@ class AxiomCliInstallChecks:
     COMMANDS = ("axiom-cli install", "axiom-cli doctor", "axiom-cli version")
     VERBS = ("install", "update", "doctor", "version", "uninstall")
     FORBIDDEN = ("elevation", "bash", "wsl", "docker", "node.js")
+    AUTHORITY_HEADING = "resolving an authority revision"
+    IMMUTABLE_MARKER = "resolve every named authority at an immutable revision"
+    PIN_STATE_MARKER = "authority-absent-at-pin"
+    RESOLVED_REVISION_MARKER = "the resolved authority revision"
+    CASES_HEADING = "case outcomes"
+    CASES = (
+        "positive",
+        "declared but not yet verified",
+        "undeclared platform",
+        "missing mandatory dependency",
+    )
+    VERDICTS = ("passed", "refused", "unverified", "not_run")
+    UNDECLARED_EXAMPLES = ("windows-arm64", "linux-arm64")
 
     @classmethod
     def check(cls, text: str) -> list[str]:
@@ -738,6 +775,24 @@ class AxiomCliInstallChecks:
             problems.append("skill does not state the no-bash/docker/node/elevation rule")
         if "not_ready" not in flat or "exit 4" not in text:
             problems.append("skill does not record the current not-ready state")
+        if cls.AUTHORITY_HEADING not in flat:
+            problems.append("skill does not resolve a named authority at an immutable revision")
+        if cls.IMMUTABLE_MARKER not in flat:
+            problems.append("skill does not require an immutable authority revision")
+        if cls.PIN_STATE_MARKER not in flat:
+            problems.append("skill does not record the pin state when an authority is absent at the pin")
+        if cls.RESOLVED_REVISION_MARKER not in flat:
+            problems.append("skill does not record the resolved authority revision in its report")
+        if cls.CASES_HEADING not in flat:
+            problems.append("skill does not declare the positive, negative and boundary case outcomes")
+        for case in cls.CASES:
+            if case not in flat:
+                problems.append(f"skill does not declare the {case} case")
+        for verdict in cls.VERDICTS:
+            if verdict not in flat:
+                problems.append(f"skill does not use the {verdict} verdict")
+        if not any(example in text for example in cls.UNDECLARED_EXAMPLES):
+            problems.append("skill names no undeclared-platform example")
         return problems
 
 
@@ -1019,6 +1074,266 @@ class AxiomCliInstallSkillTests(unittest.TestCase):
         mutated = text.replace(AxiomCliInstallChecks.WSL_MARKER, "Handle the WSL2 lane")
         problems = AxiomCliInstallChecks.check(mutated)
         self.assertTrue(any("WSL2 lane as Linux evidence" in p for p in problems), problems)
+
+
+class DistributionAuthorityResolver:
+    """Resolve the real ``axiom-specs`` checkout the distributed-CLI skill names as its authority.
+
+    The skill points at two files in another repository. They are read from a resolvable checkout so
+    the skill's claims can be checked against the real contract bytes; when none is resolvable the
+    agreement tests skip with the reason instead of passing on an authority nothing read.
+    """
+
+    ENV = "AXIOM_SPECS_ROOT"
+    CONTRACT = "contracts/axiom-cli-distribution-contract.md"
+    MATRIX = "compatibility/platform-matrix.json"
+    GUIDE = "repo-seeds/axiom-cli/docs/30-DISTRIBUTION-AND-INSTALLERS.md"
+    CONTRACT_ID = "axiom-ecosystem-installation"
+
+    @classmethod
+    def candidates(cls) -> list[Path]:
+        found: list[Path] = []
+        env = os.environ.get(cls.ENV)
+        if env:
+            found.append(Path(env))
+        found.extend(component_checkouts(("axiom-specs", "axiom-specs-main")))
+        return found
+
+    @classmethod
+    def resolve(cls) -> Path | None:
+        for root in cls.candidates():
+            if (root / cls.CONTRACT).is_file() and (root / cls.MATRIX).is_file():
+                return root.resolve()
+        return None
+
+    @classmethod
+    def contract_text(cls, specs: Path) -> str:
+        return (specs / cls.CONTRACT).read_text(encoding="utf-8")
+
+    @classmethod
+    def matrix(cls, specs: Path) -> dict:
+        return json.loads((specs / cls.MATRIX).read_text(encoding="utf-8"))["distribution"]
+
+    @staticmethod
+    def pin_state(specs: Path, pin: str, relative: str) -> str:
+        """Return present/absent for ``<pin>:<relative>``, or unknown when git is unavailable."""
+        if shutil.which("git") is None or not (specs / ".git").exists():
+            return "unknown"
+        probe = subprocess.run(
+            ["git", "-C", str(specs), "cat-file", "-e", f"{pin}:{relative}"],
+            capture_output=True,
+            text=True,
+        )
+        return "present" if probe.returncode == 0 else "absent"
+
+
+class DistributionAgreementChecks:
+    """J-010 - reusable agreement rules between the skill and the contract it names."""
+
+    CONTRACT_SECTIONS = (
+        (2, "entrypoint and verbs"),
+        (3, "delivery platforms and artifact classes"),
+        (4, "release tiers"),
+        (5, "container channel"),
+        (6, "update channel"),
+        (7, "dependency table"),
+        (8, "evidence and verification"),
+        (9, "forbidden set"),
+    )
+    FINISH_FIRST = ("windows-x64", "macos-x64", "container-linux-x64")
+    TEST_LATER = ("linux-x64", "macos-arm64", "wsl2-linux-x64")
+    MANDATORY = ("rust-toolchain", "python-interpreter", "sqlite-driver")
+    NON_MANDATORY = ("nodejs", "wsl", "docker", "bash")
+    FORBIDDEN_PINS = ("main", "master", "develop", "latest", "HEAD", "*")
+
+    @staticmethod
+    def headings(contract: str) -> dict[int, str]:
+        found: dict[int, str] = {}
+        for line in contract.splitlines():
+            match = re.match(r"^## (\d+)\. (.+)$", line.strip())
+            if match:
+                found[int(match.group(1))] = match.group(2).strip().lower()
+        return found
+
+    @classmethod
+    def enumeration(cls, ids) -> str:
+        ids = list(ids)
+        return ", ".join(f"`{i}`" for i in ids[:-1]) + f" and `{ids[-1]}`"
+
+    @classmethod
+    def undeclared_refusal(cls, declared, sample: str, verdicts: dict) -> list[str]:
+        """Return the recorded outcome for an os/arch pair the contract does not declare."""
+        problems: list[str] = []
+        if sample in declared:
+            problems.append(f"undeclared-platform probe {sample} is declared by the contract")
+        if verdicts.get(sample) != "refused":
+            problems.append(f"undeclared-platform probe {sample} was not refused by name")
+        return problems
+
+
+class AxiomCliDistributionAgreementTests(unittest.TestCase):
+    """J-010 - the skill is checked against the real distribution contract and platform matrix."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.specs = DistributionAuthorityResolver.resolve()
+        if cls.specs is None:
+            raise unittest.SkipTest(
+                "no axiom-specs checkout holding the distribution contract is resolvable; set "
+                f"{DistributionAuthorityResolver.ENV} to check the skill against the real authority"
+            )
+        cls.contract = DistributionAuthorityResolver.contract_text(cls.specs)
+        cls.matrix = DistributionAuthorityResolver.matrix(cls.specs)
+        cls.skill = read("skills/axiom-cli-install/SKILL.md")
+        cls.flat = flatten(cls.skill)
+        cls.platforms = [p["platform_id"] for p in cls.matrix["delivery_platforms"]]
+
+    def test_the_skill_names_the_authorities_the_owner_repository_actually_ships(self):
+        for relative in (
+            DistributionAuthorityResolver.CONTRACT,
+            DistributionAuthorityResolver.MATRIX,
+            DistributionAuthorityResolver.GUIDE,
+        ):
+            self.assertTrue((self.specs / relative).is_file(), relative)
+        self.assertIn(DistributionAuthorityResolver.CONTRACT, self.skill)
+        self.assertIn(DistributionAuthorityResolver.MATRIX, self.skill)
+        self.assertIn("docs/30-DISTRIBUTION-AND-INSTALLERS.md", self.skill)
+
+    def test_every_declared_platform_id_agrees_with_the_matrix(self):
+        self.assertEqual(len(self.platforms), 6, self.platforms)
+        enumeration = DistributionAgreementChecks.enumeration(self.platforms)
+        self.assertIn(enumeration, self.flat, enumeration)
+
+    def test_tier_membership_agrees_with_the_contract_and_the_matrix(self):
+        tiers = {entry["tier_id"]: list(entry["platforms"]) for entry in self.matrix["tiers"]}
+        self.assertEqual(tiers["finish-first"], list(DistributionAgreementChecks.FINISH_FIRST))
+        self.assertEqual(tiers["design-complete-test-later"], list(DistributionAgreementChecks.TEST_LATER))
+        for platform in self.matrix["delivery_platforms"]:
+            expected = "finish-first" if platform["platform_id"] in tiers["finish-first"] else "design-complete-test-later"
+            self.assertEqual(platform["tier"], expected, platform["platform_id"])
+        for tier_id in tiers:
+            self.assertIn(tier_id, self.skill)
+        self.assertIn("must never be presented as finish-first", self.flat)
+
+    def test_every_cited_contract_section_exists_in_the_real_contract(self):
+        headings = DistributionAgreementChecks.headings(self.contract)
+        for number, title in DistributionAgreementChecks.CONTRACT_SECTIONS:
+            self.assertIn(number, headings, f"contract section {number} is missing")
+            self.assertIn(title, headings[number], f"contract section {number} is titled {headings[number]}")
+            self.assertIn(f"section {number} {title}", self.flat, f"skill cites section {number} wrongly")
+
+    def test_dependency_rows_agree_with_the_matrix_table(self):
+        rows = self.matrix["dependencies"]
+        mandatory = {row["prerequisite"] for row in rows if row["mandatory"]}
+        optional = {row["prerequisite"] for row in rows if not row["mandatory"]}
+        self.assertEqual(mandatory, set(DistributionAgreementChecks.MANDATORY))
+        self.assertEqual(optional, set(DistributionAgreementChecks.NON_MANDATORY))
+        for row in rows:
+            self.assertFalse(row["elevation_required"], row["prerequisite"])
+        self.assertIn("rust toolchain", self.flat)
+        self.assertIn("python interpreter", self.flat)
+        self.assertIn("sqlite driver", self.flat)
+        self.assertIn("undeclared-pending", self.flat)
+
+    def test_update_channel_manifest_and_forbidden_pins_agree(self):
+        channel = self.matrix["update_channel"]
+        self.assertEqual(channel["manifest"], "channels/stable.json")
+        self.assertFalse(channel["may_push"])
+        self.assertEqual(channel["rollback_keeps_previous_generations"], 1)
+        self.assertIn(channel["manifest"], self.skill)
+        for pin in DistributionAgreementChecks.FORBIDDEN_PINS:
+            self.assertIn(pin, channel["forbidden_pins"])
+        self.assertIn("at least one previous generation is retained", self.flat)
+
+    def test_pin_state_is_observed_instead_of_assumed(self):
+        pin = json.loads(read("spec.lock.json"))["spec_revision"]
+        self.assertRegex(pin, r"^[0-9a-f]{40}$")
+        state = DistributionAuthorityResolver.pin_state(
+            self.specs, pin, DistributionAuthorityResolver.CONTRACT
+        )
+        if state == "unknown":
+            self.skipTest("git or an immutable axiom-specs checkout is unavailable to resolve the pin")
+        print(f"J-010 pin={pin} distribution-contract-at-pin={state}")
+        if state == "absent":
+            self.assertIn(AxiomCliInstallChecks.PIN_STATE_MARKER, self.skill)
+        else:
+            self.assertEqual("present", state)
+
+    def test_an_undeclared_platform_is_refused_by_name(self):
+        verdicts = {"windows-arm64": "refused", "linux-arm64": "refused"}
+        for sample in verdicts:
+            problems = DistributionAgreementChecks.undeclared_refusal(self.platforms, sample, verdicts)
+            self.assertEqual(problems, [], problems)
+        self.assertIn("windows-x64", self.platforms)
+        self.assertIn(AxiomCliInstallChecks.DECLARED_TARGET_MARKER, self.skill)
+
+    def test_the_wsl2_lane_evidence_target_is_linux(self):
+        by_id = {p["platform_id"]: p for p in self.matrix["delivery_platforms"]}
+        wsl = by_id["wsl2-linux-x64"]
+        self.assertEqual(wsl["native_target"], "linux-x64")
+        self.assertEqual(wsl["evidence_target"], "linux-x64")
+        self.assertNotEqual(wsl["native_target"], by_id["windows-x64"]["native_target"])
+
+    def test_no_declared_target_is_certified_and_the_skill_says_so(self):
+        self.assertEqual(self.matrix["container"]["published_image_digest"], None)
+        self.assertFalse(self.matrix["container"]["native_evidence"])
+        for platform in self.matrix["delivery_platforms"]:
+            self.assertFalse(platform["certified"], platform["platform_id"])
+            self.assertEqual(platform["evidence"], [], platform["platform_id"])
+        self.assertIn("certified: true", self.skill)
+        self.assertIn("certified: false", self.skill)
+
+    def test_negative_skill_that_installs_from_an_unresolved_authority_is_rejected(self):
+        unheaded = self.skill.replace("### Resolving an authority revision", "### The authority")
+        problems = AxiomCliInstallChecks.check(unheaded)
+        self.assertTrue(any("named authority" in p for p in problems), problems)
+        mutating = self.skill.replace(
+            "Resolve every named authority at an immutable revision", "Read an authority"
+        )
+        problems = AxiomCliInstallChecks.check(mutating)
+        self.assertTrue(any("immutable authority revision" in p for p in problems), problems)
+
+    def test_boundary_skill_that_drops_the_pin_state_record_is_rejected(self):
+        mutated = self.skill.replace(AxiomCliInstallChecks.PIN_STATE_MARKER, "the pin")
+        problems = AxiomCliInstallChecks.check(mutated)
+        self.assertTrue(any("pin state" in p for p in problems), problems)
+
+    def test_negative_skill_that_omits_the_case_matrix_is_rejected(self):
+        mutated = self.skill.replace("## Case outcomes", "## Notes")
+        problems = AxiomCliInstallChecks.check(mutated)
+        self.assertTrue(any("case outcomes" in p for p in problems), problems)
+
+
+class AxiomCliEntrypointSurfaceTests(unittest.TestCase):
+    """J-010 - the distributed entrypoint advertises the contract verbs when a build is resolvable."""
+
+    @staticmethod
+    def resolve_binary() -> Path | None:
+        candidates: list[Path] = []
+        env = os.environ.get("AXIOM_CLI_BIN")
+        if env:
+            candidates.append(Path(env))
+        for name in (
+            "target/release/axiom-cli.exe",
+            "target/debug/axiom-cli.exe",
+            "target/release/axiom-cli",
+            "target/debug/axiom-cli",
+        ):
+            for checkout in component_checkouts(("axiom-cli",)):
+                candidates.append(checkout / name)
+        for candidate in candidates:
+            if candidate.is_file():
+                return candidate
+        return None
+
+    def test_help_advertises_every_contract_verb(self):
+        binary = self.resolve_binary()
+        if binary is None:
+            self.skipTest("no axiom-cli build is resolvable; set AXIOM_CLI_BIN to run this leg")
+        probe = subprocess.run([str(binary), "--help"], capture_output=True, text=True)
+        self.assertEqual(probe.returncode, 0, probe.stderr)
+        for verb in AxiomCliInstallChecks.VERBS:
+            self.assertIn(verb, probe.stdout, verb)
 
 
 class SkillsManifestTests(unittest.TestCase):
