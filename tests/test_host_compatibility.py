@@ -289,10 +289,10 @@ class HostCompatibilityDriftTests(unittest.TestCase):
     def test_docs_stay_outside_the_declared_bundle_scope(self) -> None:
         manifest = json.loads(read("release/skills-manifest.json"))
         scopes = manifest["install_policy"]["declared_scope"]
-        self.assertEqual(["policy", "skills", "adapters"], scopes)
+        self.assertEqual(["policy", "skills", "adapters", "plugins", ".agents/plugins", ".claude-plugin", "marketplace-plugins"], scopes)
         for added in ("docs", "tests"):
             self.assertNotIn(added, scopes, f"{added}/ must stay outside the hashed bundle scope")
-        self.assertEqual(22, len(manifest["files"]))
+        self.assertEqual(41, len(manifest["files"]))
 
     def test_shipped_manifest_verifier_still_accepts_the_bundle(self) -> None:
         spec = importlib.util.spec_from_file_location(

@@ -1,0 +1,15 @@
+{
+  "name": "axiom-skills",
+  "description": "Axiom graph skills for supported agent hosts",
+  "owner": {
+    "name": "orchex006"
+  },
+  "plugins": [
+    {
+      "name": "axiom",
+      "description": "Axiom graph skills for repository analysis and operations",
+      "source": "./plugins/axiom",
+      "category": "development"
+    }
+  ]
+}
