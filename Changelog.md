@@ -5,6 +5,15 @@ version; entries below are unreleased working-tree changes, not a published rele
 
 ## Unreleased
 
+### Portable plugin package and host marketplaces
+
+Added one `plugins/axiom` skill package with Codex, Claude Code, Gemini CLI and
+Antigravity manifests, a Codex marketplace, a Claude marketplace and a cross-host
+catalog in `marketplace-plugins/`. The packaged skills and policy are checked
+byte-for-byte against their canonical source. Plugin installation does not install
+the Axiom runtime, start MCP or claim host certification. Added manifest coverage
+and positive and tampered-package tests.
+
 ### README specification-pin validator invocation (W10-READMES)
 
 `README.md` §"Specification pin" documented `python tools/spec-lock-check.py --lock

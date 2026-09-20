@@ -1,0 +1,10 @@
+{
+  "name": "axiom-skills",
+  "package": "plugins/axiom",
+  "hosts": {
+    "codex": ".agents/plugins/marketplace.json",
+    "claude": ".claude-plugin/marketplace.json",
+    "gemini": "plugins/axiom/gemini-extension.json",
+    "antigravity": "plugins/axiom/plugin.json"
+  }
+}

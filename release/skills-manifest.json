@@ -9,7 +9,11 @@
     "declared_scope": [
       "policy",
       "skills",
-      "adapters"
+      "adapters",
+      "plugins",
+      ".agents/plugins",
+      ".claude-plugin",
+      "marketplace-plugins"
     ],
     "missing_files": "fail",
     "hash_mismatch": "fail",
@@ -159,6 +163,120 @@
       "role": "host-adapter-compatibility",
       "sha256": "41b43840a24f80db6a3686f001d69f6b5b3c94a0c7bb98a7bd0466b416998f5d",
       "bytes": 13508
+    },
+    {
+      "path": "plugins/axiom/.claude-plugin/plugin.json",
+      "role": "plugin-package",
+      "sha256": "a6a3f3c09e849e4448939d890b17ea44fcd9004fdc25c16c0de77ab4e5be1670",
+      "bytes": 173
+    },
+    {
+      "path": "plugins/axiom/.codex-plugin/plugin.json",
+      "role": "plugin-package",
+      "sha256": "21b1a82bee93fc0edb23d49d0874450f21c0377366ff33b75125ecc389a3b36f",
+      "bytes": 789
+    },
+    {
+      "path": "plugins/axiom/gemini-extension.json",
+      "role": "plugin-package",
+      "sha256": "24173c7e07f9891acd90126926a80b0af0f815e1f21653032946677eb983e94c",
+      "bytes": 164
+    },
+    {
+      "path": "plugins/axiom/GEMINI.md",
+      "role": "plugin-package",
+      "sha256": "c387f1a23bc4dfeb25dedb3ab6d4903b01ad16a7db7a31b7da027a93fe4ca953",
+      "bytes": 369
+    },
+    {
+      "path": "plugins/axiom/plugin.json",
+      "role": "plugin-package",
+      "sha256": "da4aca6feb231965ff2fcfe9d0f56f6a22767c5e702287394ae5d3a0d0c7219a",
+      "bytes": 166
+    },
+    {
+      "path": "plugins/axiom/policy/POLICY.md",
+      "role": "plugin-package",
+      "sha256": "96713d17e1e82dac2636dec746ed9ce5b57efd097e714ea119e59c061306133f",
+      "bytes": 5153
+    },
+    {
+      "path": "plugins/axiom/README.md",
+      "role": "plugin-package",
+      "sha256": "acc71fe2555958422b18bb72665b3dd385821a125571ed25304c5d206b4dda13",
+      "bytes": 720
+    },
+    {
+      "path": "plugins/axiom/skills/axiom-cli-install/SKILL.md",
+      "role": "plugin-package",
+      "sha256": "b21a0c94434fcc77db9547f53ae9a3406c971b9aae49b22f87e9045a6597e3f0",
+      "bytes": 14120
+    },
+    {
+      "path": "plugins/axiom/skills/graph-checkpoint/SKILL.md",
+      "role": "plugin-package",
+      "sha256": "acc44509ade81953cc4ac92028bf0722ba85366333cf104aa1a74edd618abb0f",
+      "bytes": 5821
+    },
+    {
+      "path": "plugins/axiom/skills/graph-context/SKILL.md",
+      "role": "plugin-package",
+      "sha256": "7b62ed7fc0db9c407e3c87a27f5789d4da9774b7624dbf0795c7c5c9ad47b072",
+      "bytes": 3432
+    },
+    {
+      "path": "plugins/axiom/skills/graph-doctor/SKILL.md",
+      "role": "plugin-package",
+      "sha256": "34a2d9c0dc05671b59e3f3b25d26cbe5d7a267da0e1aaee2d979d73df79cc4c4",
+      "bytes": 5558
+    },
+    {
+      "path": "plugins/axiom/skills/graph-impact/SKILL.md",
+      "role": "plugin-package",
+      "sha256": "56d4cd787530cf07bf5eae473cb2e14d5e22ad76713d1e246fdfccae2392d3d2",
+      "bytes": 4489
+    },
+    {
+      "path": "plugins/axiom/skills/graph-install/SKILL.md",
+      "role": "plugin-package",
+      "sha256": "54bf9b32e04465bf6423226e4894979b271754252d9a5f55804c8b546aeb79a7",
+      "bytes": 9766
+    },
+    {
+      "path": "plugins/axiom/skills/graph-reconcile/SKILL.md",
+      "role": "plugin-package",
+      "sha256": "fe30997c49637a3bba824374b36d7f4604189e6824d372ab6387cb22efd0d38d",
+      "bytes": 3635
+    },
+    {
+      "path": "plugins/axiom/skills/graph-update/SKILL.md",
+      "role": "plugin-package",
+      "sha256": "51bfccb938717ecc73e029979f25fa4c88223be187dce10e081e24b54bb94696",
+      "bytes": 5535
+    },
+    {
+      "path": ".agents/plugins/marketplace.json",
+      "role": "plugin-marketplace",
+      "sha256": "2135ffa797f268373766af53e080b8f43af1ca352c4fb3eeadb04f7e53188515",
+      "bytes": 364
+    },
+    {
+      "path": ".claude-plugin/marketplace.json",
+      "role": "plugin-marketplace",
+      "sha256": "d8b7625b0798a1ba37138a8122fdf8d6e5dee057f619db9880d4c4dedd7fa35d",
+      "bytes": 340
+    },
+    {
+      "path": "marketplace-plugins/catalog.json",
+      "role": "plugin-marketplace",
+      "sha256": "2f2790857fad4ea17e69b5b302edd37f1d8aefb5c37e9d1a690414debf252eef",
+      "bytes": 275
+    },
+    {
+      "path": "marketplace-plugins/README.md",
+      "role": "plugin-marketplace",
+      "sha256": "295970213d22803ac4accd477ca7e00d1f014a0d329164c445c552914066d2be",
+      "bytes": 1375
     }
   ]
 }

@@ -37,17 +37,32 @@ adapters/                 per-host adapters (see the host table below)
 templates/bootstrap/      managed AGENTS block, gitignore fragment, bootstrap manifest
 release/skills-manifest.json   hash-pinned bundle declaration, fail-closed install policy
 release/verify_manifest.py     reference verifier for that manifest
+release/build_plugin_bundle.py byte-for-byte check/copy of canonical skills into the plugin
+plugins/axiom/            one portable plugin package for four hosts
+.agents/plugins/          Codex marketplace catalog
+.claude-plugin/           Claude Code marketplace catalog
+marketplace-plugins/      cross-host package index and installation guide
 docs/                     host compatibility, host wiring and agent workflow guides
-tests/                    five test modules
+tests/                    unit and package validation tests
 ```
+
+## Plugin distribution
+
+`plugins/axiom` packages the eight canonical skills and policy for Codex, Claude Code,
+Gemini CLI and Antigravity. The Codex and Claude marketplaces point to the same
+package; Gemini and Antigravity install it by local path. See
+[marketplace-plugins/README.md](marketplace-plugins/README.md) for entrypoints.
+The plugin does not start an MCP server or install the Axiom runtime. Run
+`python release/build_plugin_bundle.py` to check that packaged skills and policy
+match the canonical source before publishing or updating the bundle.
 
 ## Host adapters
 
-All four supported hosts are usable, and each one expresses the canonical
-completion gate in its **own** documented decision vocabulary. There is no
-"unsupported host" among them: what differs is the event name and the output
-shape, never whether the gate exists. Choosing Codex CLI, Claude Code, Gemini CLI
-or Antigravity (AGY) is therefore a matter of which host you already run.
+All four host adapters have in-repository implementations, and each one expresses
+the canonical completion gate in its **own** documented decision vocabulary.
+Installed-host runtime certification remains pending; the event name and output
+shape differ by host. Choose Codex CLI, Claude Code, Gemini CLI or Antigravity
+(AGY) only after checking the installed version and its recorded capabilities.
 
 | Host | Adapter | Completion gate | Host decision output |
 | --- | --- | --- | --- |
