@@ -14,11 +14,15 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
 DEFAULT_MANIFEST = "release/skills-manifest.json"
 SEMVER = r"^\d+\.\d+\.\d+(?:-[0-9A-Za-z.\-]+)?$"
+PINNED_REVISION = re.compile(r"[0-9a-f]{40}\Z")
+EXECUTABLE_SUFFIXES = {"exe", "bat", "cmd", "ps1", "sh", "py", "js", "mjs"}
+SCRIPT_CAPABILITIES = {"read", "write", "execute"}
 
 
 class ManifestError(Exception):
@@ -55,6 +59,9 @@ def verify(manifest_path: Path, root: Path) -> list[str]:
     manifest = load_manifest(manifest_path)
     if not manifest.get("component"):
         problems.append("manifest does not declare a component identity")
+    revision = manifest.get("spec_revision")
+    if not isinstance(revision, str) or not PINNED_REVISION.fullmatch(revision):
+        problems.append("manifest does not pin a 40-hex spec_revision")
     files = manifest.get("files")
     if not isinstance(files, list) or not files:
         return problems + ["manifest declares no files"]
@@ -72,6 +79,16 @@ def verify(manifest_path: Path, root: Path) -> list[str]:
             problems.append(f"duplicate declaration fails install: {rel}")
             continue
         declared.add(rel)
+        suffix = rel.rsplit(".", 1)[-1].lower() if "." in rel else ""
+        capabilities = entry.get("capabilities")
+        if suffix in EXECUTABLE_SUFFIXES:
+            if (not isinstance(capabilities, list) or not capabilities
+                    or any(not isinstance(item, str) or item not in SCRIPT_CAPABILITIES for item in capabilities)
+                    or len(set(capabilities)) != len(capabilities)
+                    or "execute" not in capabilities):
+                problems.append(f"executable lacks valid capability review: {rel}")
+        elif capabilities not in (None, []):
+            problems.append(f"non-executable declares script capabilities: {rel}")
         target = root / rel
         if not target.is_file():
             problems.append(f"declared file is missing: {rel}")

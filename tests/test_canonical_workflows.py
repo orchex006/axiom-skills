@@ -698,7 +698,7 @@ class AxiomCliInstallChecks:
     DEPENDENCY_MARKER = "Read the dependency table and the release tiers before you install anything."
     DECLARED_TARGET_MARKER = "Refuse to install on a target the contract does not declare"
     ENTRYPOINT_MARKER = "Probe and drive every verb through the distributed entrypoint only."
-    WSL_MARKER = "Treat the WSL2 lane as Linux evidence only."
+    WSL_MARKER = "Treat WSL2 as its own execution lane."
     CERTIFY_MARKER = "Record certification state and never promote a tier."
     PLATFORMS = (
         "windows-x64",
@@ -756,7 +756,7 @@ class AxiomCliInstallChecks:
             if verb not in flat:
                 problems.append(f"skill does not drive the {verb} verb")
         if cls.WSL_MARKER not in text:
-            problems.append("skill does not treat the WSL2 lane as Linux evidence")
+            problems.append("skill does not keep WSL2 evidence separate")
         if "windows evidence" not in flat:
             problems.append("skill does not forbid recording WSL2 as Windows evidence")
         if cls.CERTIFY_MARKER not in text:
@@ -1055,7 +1055,7 @@ class AxiomCliInstallSkillTests(unittest.TestCase):
         problems = AxiomCliInstallChecks.check(fixture)
         self.assertTrue(any("undeclared target" in p for p in problems), problems)
         self.assertTrue(any("distributed entrypoint" in p for p in problems), problems)
-        self.assertTrue(any("WSL2 lane as Linux evidence" in p for p in problems), problems)
+        self.assertTrue(any("WSL2 evidence separate" in p for p in problems), problems)
 
     def test_negative_skill_that_promotes_every_tier_is_rejected(self):
         fixture = (
@@ -1063,7 +1063,7 @@ class AxiomCliInstallSkillTests(unittest.TestCase):
             "name: axiom-cli-install\n"
             "description: Promote every declared platform.\n"
             "---\n\n"
-            "Present every design-complete, test-later platform as finish-first and mark each\n"
+            "Present every deferred platform as finish-first and mark each\n"
             "platform `certified: true` before any evidence exists.\n"
         )
         problems = AxiomCliInstallChecks.check(fixture)
@@ -1074,7 +1074,7 @@ class AxiomCliInstallSkillTests(unittest.TestCase):
         text = read("skills/axiom-cli-install/SKILL.md")
         mutated = text.replace(AxiomCliInstallChecks.WSL_MARKER, "Handle the WSL2 lane")
         problems = AxiomCliInstallChecks.check(mutated)
-        self.assertTrue(any("WSL2 lane as Linux evidence" in p for p in problems), problems)
+        self.assertTrue(any("WSL2 evidence separate" in p for p in problems), problems)
 
 
 class DistributionAuthorityResolver:
@@ -1141,8 +1141,8 @@ class DistributionAgreementChecks:
         (8, "evidence and verification"),
         (9, "forbidden set"),
     )
-    FINISH_FIRST = ("windows-x64", "macos-x64", "container-linux-x64")
-    TEST_LATER = ("linux-x64", "macos-arm64", "wsl2-linux-x64")
+    FINISH_FIRST = ("windows-x64", "wsl2-linux-x64", "container-linux-x64", "macos-x64")
+    DEFERRED = ("linux-x64", "macos-arm64")
     MANDATORY = ("rust-toolchain", "python-interpreter", "sqlite-driver")
     NON_MANDATORY = ("nodejs", "wsl", "docker", "bash")
     FORBIDDEN_PINS = ("main", "master", "develop", "latest", "HEAD", "*")
@@ -1208,9 +1208,9 @@ class AxiomCliDistributionAgreementTests(unittest.TestCase):
     def test_tier_membership_agrees_with_the_contract_and_the_matrix(self):
         tiers = {entry["tier_id"]: list(entry["platforms"]) for entry in self.matrix["tiers"]}
         self.assertEqual(tiers["finish-first"], list(DistributionAgreementChecks.FINISH_FIRST))
-        self.assertEqual(tiers["design-complete-test-later"], list(DistributionAgreementChecks.TEST_LATER))
+        self.assertEqual(tiers["deferred"], list(DistributionAgreementChecks.DEFERRED))
         for platform in self.matrix["delivery_platforms"]:
-            expected = "finish-first" if platform["platform_id"] in tiers["finish-first"] else "design-complete-test-later"
+            expected = "finish-first" if platform["platform_id"] in tiers["finish-first"] else "deferred"
             self.assertEqual(platform["tier"], expected, platform["platform_id"])
         for tier_id in tiers:
             self.assertIn(tier_id, self.skill)
@@ -1268,12 +1268,13 @@ class AxiomCliDistributionAgreementTests(unittest.TestCase):
         self.assertIn("windows-x64", self.platforms)
         self.assertIn(AxiomCliInstallChecks.DECLARED_TARGET_MARKER, self.skill)
 
-    def test_the_wsl2_lane_evidence_target_is_linux(self):
+    def test_the_wsl2_lane_has_its_own_evidence_target(self):
         by_id = {p["platform_id"]: p for p in self.matrix["delivery_platforms"]}
         wsl = by_id["wsl2-linux-x64"]
-        self.assertEqual(wsl["native_target"], "linux-x64")
-        self.assertEqual(wsl["evidence_target"], "linux-x64")
-        self.assertNotEqual(wsl["native_target"], by_id["windows-x64"]["native_target"])
+        self.assertIsNone(wsl["native_target"])
+        self.assertEqual(wsl["evidence_target"], "wsl2-linux-x64")
+        self.assertNotEqual(wsl["evidence_target"], by_id["windows-x64"]["evidence_target"])
+        self.assertNotEqual(wsl["evidence_target"], by_id["linux-x64"]["evidence_target"])
 
     def test_no_declared_target_is_certified_and_the_skill_says_so(self):
         self.assertEqual(self.matrix["container"]["published_image_digest"], None)

@@ -69,7 +69,7 @@ authority.
    distribution contract section 7 dependency table record, per prerequisite, the component that
    needs it, the manifest or document that proves its version, whether it is mandatory and whether
    it needs elevation. From section 4 release tiers record which platforms are finish-first and
-   which are design-complete, test-later. A prerequisite whose owning repository has not pinned a
+   which are deferred. All four finish-first execution lanes are release-blocking. A prerequisite whose owning repository has not pinned a
    version is recorded as `undeclared-pending-<task>`; the distribution must not guess a version,
    and no release tier may be relaxed, removed or re-labelled.
 
@@ -112,14 +112,14 @@ authority.
 
 7. **Record certification state and never promote a tier.** A platform or tier is `certified: true`
    only when every evidence category its native target requires has a recorded artifact with a
-   digest; absent evidence means `certified: false` and empty evidence. A design-complete,
-   test-later platform must never be presented as finish-first. Record the target you actually
+   digest; absent evidence means `certified: false` and empty evidence. A deferred
+   platform must never be presented as finish-first. Record the target you actually
    executed and report every target you could not exercise as **unverified**, with its exact
    reproducible command and its `skipped` or `not_run` state, never as passing.
 
-8. **Treat the WSL2 lane as Linux evidence only.** `wsl2-linux-x64` is recorded as `linux-x64`
-   evidence and must never be recorded as Windows evidence; the Windows target requires a native
-   Windows execution. A cross-compile is not runtime evidence for any target, and a container run
+8. **Treat WSL2 as its own execution lane.** `wsl2-linux-x64` requires evidence recorded as
+   `wsl2-linux-x64` from WSL2; it is not interchangeable with native `linux-x64` or Windows
+   evidence. The Windows target requires a native Windows execution. A cross-compile is not runtime evidence for any target, and a container run
    is not runtime evidence for any native target.
 
 9. **Report honestly and end at the Human result.** The run ends at the same recorded verification
@@ -136,7 +136,7 @@ and a case the host cannot perform is `not_run` with its exact command and its e
 | Case | Shape | Required recorded outcome |
 |---|---|---|
 | positive | the host is a declared delivery target and the entrypoint is present: `windows-x64` on Windows, `macos-x64` on macOS, `container-linux-x64` in the published container | drive `install`, `update`, `doctor`, `version` and `uninstall` through the entrypoint and record the per-verb result; a verb that answers `NotReady` with exit code 4 is recorded as `unverified` for that leg, never as `passed`, and the run does not become a completed installation |
-| declared but not yet verified | a target the contract declares that this host is not: `linux-x64`, `macos-arm64` or `wsl2-linux-x64` | `unverified` with its tier (`design-complete-test-later`), its `certified: false` state and the reason no native execution record exists; a `wsl2-linux-x64` run is recorded as `linux-x64` evidence |
+| declared but not yet verified | a target the contract declares that this host is not: `linux-x64`, `macos-arm64` or `wsl2-linux-x64` | `unverified` with its declared tier (`deferred` or `finish-first`), its `certified: false` state and the reason no matching execution record exists; WSL2 requires separate WSL2 evidence |
 | undeclared platform | an os/arch pair no delivery platform declares, for example `windows-arm64` or `linux-arm64` | `refused` by name before any write; record the observed os and arch and the ids the contract does declare |
 | missing mandatory dependency | a prerequisite the contract marks mandatory is absent or unknown on this host: the Rust toolchain, the Python interpreter or the SQLite driver | `refused` by name before any write, naming the prerequisite and its `mandatory: yes` row; a non-mandatory row (`nodejs`, `wsl`, `docker`, `bash`) never refuses an install |
 
@@ -164,7 +164,7 @@ concrete reason rather than reported as working.
 ## Prohibited behaviours
 
 - Do not invent a version, a URL, a channel or a command that no owner repository defines.
-- Do not install on an undeclared platform, and do not present a design-complete, test-later
+- Do not install on an undeclared platform, and do not present a deferred
   platform as finish-first.
 - Do not record a WSL2 run as Windows evidence, a cross-compile as runtime evidence, or a container
   run as native-target evidence.

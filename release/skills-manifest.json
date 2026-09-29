@@ -5,6 +5,7 @@
   "channel": "experimental",
   "released": true,
   "spec_version": "2.0.0-draft.1",
+  "spec_revision": "6b23ea78e19902726edf40dbd9c15bda27c91ebb",
   "install_policy": {
     "declared_scope": [
       "policy",
@@ -83,8 +84,8 @@
     {
       "path": "skills/axiom-cli-install/SKILL.md",
       "role": "skill",
-      "sha256": "b21a0c94434fcc77db9547f53ae9a3406c971b9aae49b22f87e9045a6597e3f0",
-      "bytes": 14120
+      "sha256": "d2352e9027480e0696620a015b9b91fc58df0a04ab8456b5aca0af5ec4cd9631",
+      "bytes": 14151
     },
     {
       "path": "adapters/codex/instructions.md",
@@ -113,36 +114,64 @@
     {
       "path": "adapters/codex/hooks/graph_stop.py",
       "role": "host-hook",
+      "capabilities": [
+        "read",
+        "write",
+        "execute"
+      ],
       "sha256": "bc5e62750c96ee14c59c4c90fe21f73fdb68930c8b017d6021a41f58912e94ed",
       "bytes": 11558
     },
     {
       "path": "adapters/claude/hooks/graph_stop.py",
       "role": "host-hook",
+      "capabilities": [
+        "read",
+        "write",
+        "execute"
+      ],
       "sha256": "bf57f0567943bfb3b3a3b332161c1b69e967cadfd7f05bab050b0a6aa2009d5d",
       "bytes": 12581
     },
     {
       "path": "adapters/claude/hooks/graph_task_completed.py",
       "role": "host-hook",
+      "capabilities": [
+        "read",
+        "write",
+        "execute"
+      ],
       "sha256": "3b8def3693a54f88375416c21afa13ff97d53ef9705f54f7226d497b4d55a23c",
       "bytes": 12218
     },
     {
       "path": "adapters/gemini/hooks/graph_after_agent.py",
       "role": "host-hook",
+      "capabilities": [
+        "read",
+        "write",
+        "execute"
+      ],
       "sha256": "24473d21399a3d4e7bd0512fc358df927527e65e68eb87bb4e35a9580162e9c1",
       "bytes": 12850
     },
     {
       "path": "adapters/antigravity/hooks/graph_stop.py",
       "role": "host-hook",
+      "capabilities": [
+        "read",
+        "write",
+        "execute"
+      ],
       "sha256": "e93e80ff4ea1ecfc57e84151f6d7a668b2d4568462b4852abcee71d3c482bf2b",
       "bytes": 12919
     },
     {
       "path": "adapters/common/hook_runtime.py",
       "role": "host-hook-runtime",
+      "capabilities": [
+        "execute"
+      ],
       "sha256": "f77ce2d9479ecccf308bb5f1e794ac0239ab4480758bc0f5ab727f10a95f4fdd",
       "bytes": 8877
     },
@@ -177,16 +206,22 @@
       "bytes": 781
     },
     {
-      "path": "plugins/axiom/gemini-extension.json",
-      "role": "plugin-package",
-      "sha256": "9715d2fc67bd7e3c8e9a545b6b9c6f48ba403c88349d9ee62b2dcd980bc63056",
-      "bytes": 156
-    },
-    {
       "path": "plugins/axiom/GEMINI.md",
       "role": "plugin-package",
       "sha256": "c387f1a23bc4dfeb25dedb3ab6d4903b01ad16a7db7a31b7da027a93fe4ca953",
       "bytes": 369
+    },
+    {
+      "path": "plugins/axiom/README.md",
+      "role": "plugin-package",
+      "sha256": "acc71fe2555958422b18bb72665b3dd385821a125571ed25304c5d206b4dda13",
+      "bytes": 720
+    },
+    {
+      "path": "plugins/axiom/gemini-extension.json",
+      "role": "plugin-package",
+      "sha256": "9715d2fc67bd7e3c8e9a545b6b9c6f48ba403c88349d9ee62b2dcd980bc63056",
+      "bytes": 156
     },
     {
       "path": "plugins/axiom/plugin.json",
@@ -201,16 +236,10 @@
       "bytes": 5153
     },
     {
-      "path": "plugins/axiom/README.md",
-      "role": "plugin-package",
-      "sha256": "acc71fe2555958422b18bb72665b3dd385821a125571ed25304c5d206b4dda13",
-      "bytes": 720
-    },
-    {
       "path": "plugins/axiom/skills/axiom-cli-install/SKILL.md",
       "role": "plugin-package",
-      "sha256": "b21a0c94434fcc77db9547f53ae9a3406c971b9aae49b22f87e9045a6597e3f0",
-      "bytes": 14120
+      "sha256": "d2352e9027480e0696620a015b9b91fc58df0a04ab8456b5aca0af5ec4cd9631",
+      "bytes": 14151
     },
     {
       "path": "plugins/axiom/skills/graph-checkpoint/SKILL.md",
@@ -267,16 +296,16 @@
       "bytes": 340
     },
     {
-      "path": "marketplace-plugins/catalog.json",
-      "role": "plugin-marketplace",
-      "sha256": "2f2790857fad4ea17e69b5b302edd37f1d8aefb5c37e9d1a690414debf252eef",
-      "bytes": 275
-    },
-    {
       "path": "marketplace-plugins/README.md",
       "role": "plugin-marketplace",
       "sha256": "295970213d22803ac4accd477ca7e00d1f014a0d329164c445c552914066d2be",
       "bytes": 1375
+    },
+    {
+      "path": "marketplace-plugins/catalog.json",
+      "role": "plugin-marketplace",
+      "sha256": "2f2790857fad4ea17e69b5b302edd37f1d8aefb5c37e9d1a690414debf252eef",
+      "bytes": 275
     }
   ]
 }

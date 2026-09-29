@@ -5,6 +5,16 @@ version; entries below are unreleased working-tree changes, not a published rele
 
 ## Unreleased
 
+### K-011 owner skills closure candidate
+
+Pin the reviewed specification revision in the source manifest and record
+least-scoped capability declarations for all six executable hook files. This
+allows the distribution to convert the owner bundle for an isolated container
+candidate; it does not publish or activate a new skills release. Update the
+distribution skill and its packaged copy to the four finish-first lanes in the
+current platform matrix, including separate WSL2 evidence. The full owner test
+suite passes on Python 3.13 (204 tests), and the 41-file manifest verifies.
+
 ### 0.1.0 experimental Windows release
 
 Set the component, adapter and portable plugin versions to `0.1.0`. This first
