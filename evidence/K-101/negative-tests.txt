@@ -1,0 +1,5 @@
+cwd=axiom-skills (root workspace)
+command=uv run --offline --python 3.13 --with pytest python -m pytest tests/test_release_manifest_handoff.py -k corrupt_and_missing or path_escape_and_undeclared -q --no-header
+exit=0
+..                                                                       [100%]
+2 passed, 5 deselected in 0.12s

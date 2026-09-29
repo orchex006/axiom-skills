@@ -1,0 +1,159 @@
+{
+  "goal_id": "K-MacIntel-01",
+  "task_id": "K-101",
+  "parent_ids": [
+    "K-001",
+    "K-011"
+  ],
+  "owner": "axiom-skills",
+  "lane": "macos-x64",
+  "status": "local_verified",
+  "certified": false,
+  "fixture_provenance": "candidate",
+  "environment": {
+    "os": "Darwin",
+    "arch": "x86_64",
+    "os_version": "26.7",
+    "execution": "native artifact verification",
+    "runtime": "CPython 3.13.15 tests; system Python 3.9.6 manifest builder",
+    "toolchain": "uv 0.12.9; pytest 9.1.1"
+  },
+  "source_revisions": {
+    "axiom-skills": "eade281614677f96fd86260dc28e1fe0cbdeac0a",
+    "axiom-specs": "39759ac2311206059b00c44179a998f502e4e777"
+  },
+  "spec_identity": {
+    "version": "2.0.0-draft.1",
+    "revision": "39759ac2311206059b00c44179a998f502e4e777",
+    "lock_sha256": "288b2491d39762d8225315c976096ac51c1ea76ff50fd813e3b4ca7655269661",
+    "manifest_sha256": "ddba13d7d5608e58c6f8f4599c133b86f0ddbc62257b98bfe73d5c207bea8d1a"
+  },
+  "artifacts": [
+    {
+      "path": "release/skills-manifest.json",
+      "sha256": "ddba13d7d5608e58c6f8f4599c133b86f0ddbc62257b98bfe73d5c207bea8d1a",
+      "role": "41-file owner manifest"
+    },
+    {
+      "path": "evidence/K-101/owner-source.tar",
+      "sha256": "e4b6a013b4971d93298886655debef5b11b912ca7a881c2ab1648477124b1a3a",
+      "role": "complete distribution-convertible owner payload"
+    },
+    {
+      "path": "spec.lock.json",
+      "sha256": "288b2491d39762d8225315c976096ac51c1ea76ff50fd813e3b4ca7655269661",
+      "role": "immutable draft pin"
+    }
+  ],
+  "reproduce": [
+    "python3 release/verify_manifest.py",
+    "python3 release/build_engine_source.py --out <new-path>",
+    "python3 evidence/K-101/verify_archive.py"
+  ],
+  "commands": [
+    {
+      "id": "owner-tests",
+      "command": [
+        "uv",
+        "run",
+        "--offline",
+        "--python",
+        "3.13",
+        "--with",
+        "pytest",
+        "python",
+        "-m",
+        "pytest",
+        "tests",
+        "-q"
+      ],
+      "cwd": "axiom-skills",
+      "exit_code": 0,
+      "output": "evidence/K-101/owner-tests.txt",
+      "output_sha256": "a28002ba30ec41fdb9ea592fc5d53c47a5876df01f11e664ca18f0444f7d8b0a"
+    },
+    {
+      "id": "negative-tests",
+      "command": [
+        "uv",
+        "run",
+        "--offline",
+        "--python",
+        "3.13",
+        "--with",
+        "pytest",
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_release_manifest_handoff.py",
+        "-k",
+        "corrupt_and_missing or path_escape_and_undeclared",
+        "-q",
+        "--no-header"
+      ],
+      "cwd": "axiom-skills",
+      "exit_code": 0,
+      "output": "evidence/K-101/negative-tests.txt",
+      "output_sha256": "2a3f01549d8af90ab8c57019b72cb555304777edbfa2b1af03029cd42da94d9a"
+    },
+    {
+      "id": "manifest",
+      "command": [
+        "python3",
+        "release/verify_manifest.py"
+      ],
+      "cwd": "axiom-skills",
+      "exit_code": 0,
+      "output": "evidence/K-101/manifest.txt",
+      "output_sha256": "2d54a92a29e995519c8335205bd6f47805bd1dd408cb8feaf78ab9e936c8ac24"
+    },
+    {
+      "id": "plugin",
+      "command": [
+        "python3",
+        "release/build_plugin_bundle.py"
+      ],
+      "cwd": "axiom-skills",
+      "exit_code": 0,
+      "output": "evidence/K-101/plugin.txt",
+      "output_sha256": "1c8bc4e1109e45c1e229b246e9fdf358a474e208550f95761ae4d125047a53d2"
+    },
+    {
+      "id": "consumer-archive",
+      "command": [
+        "python3",
+        "evidence/K-101/verify_archive.py"
+      ],
+      "cwd": "axiom-skills",
+      "exit_code": 0,
+      "output": "evidence/K-101/consumer-archive.txt",
+      "output_sha256": "c3e4a9c8e7193db01950982d5e6903dad4bff030825211134dc054a70980ef61"
+    }
+  ],
+  "results": {
+    "bundle_valid": true,
+    "corrupt_payload_refused": true,
+    "missing_payload_refused": true,
+    "undeclared_payload_refused": true,
+    "path_escape_refused": true
+  },
+  "acceptance": {
+    "AC1": "passed: 41 declared owner files, exact manifest/spec/source identities and reproducible builder",
+    "AC2": "passed: owner tests and negative cases; archive verified after safe extraction",
+    "AC3": "pending canonical specctl after and final Git delivery receipt"
+  },
+  "limitations": [
+    "Portable bundle proof only; installed CLI/engine consumption belongs to K-105.",
+    "Mac arm64, Windows, WSL2 and container native behavior are not claimed.",
+    "Candidate uses version 0.1.0 and experimental channel; no new release/tag/certification."
+  ],
+  "delivery": {
+    "source_branch": "feature/k-101-owner-bundle",
+    "source_commit": "eade281614677f96fd86260dc28e1fe0cbdeac0a",
+    "source_remote_verified": true,
+    "evidence_commit": "pending",
+    "main_integrated": false,
+    "release_state": "candidate"
+  },
+  "next_consumer": "K-105 macos-x64 distribution install; unpack owner-source.tar and verify its skills-manifest.json before conversion"
+}

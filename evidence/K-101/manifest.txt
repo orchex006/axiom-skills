@@ -1,0 +1,4 @@
+cwd=axiom-skills (root workspace)
+command=python3 release/verify_manifest.py
+exit=0
+OK skills bundle verification: component=axiom-skills version=0.1.0 channel=experimental files=41 scopes=policy,skills,adapters,plugins,.agents/plugins,.claude-plugin,marketplace-plugins

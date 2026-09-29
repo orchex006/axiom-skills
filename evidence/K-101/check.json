@@ -1,0 +1,98 @@
+{
+  "all_passed": true,
+  "artifacts": {
+    "manifest_sha256": "ddba13d7d5608e58c6f8f4599c133b86f0ddbc62257b98bfe73d5c207bea8d1a",
+    "owner_archive_sha256": "e4b6a013b4971d93298886655debef5b11b912ca7a881c2ab1648477124b1a3a",
+    "spec_lock_sha256": "288b2491d39762d8225315c976096ac51c1ea76ff50fd813e3b4ca7655269661"
+  },
+  "certified": false,
+  "commands": [
+    {
+      "command": [
+        "uv",
+        "run",
+        "--offline",
+        "--python",
+        "3.13",
+        "--with",
+        "pytest",
+        "python",
+        "-m",
+        "pytest",
+        "tests",
+        "-q"
+      ],
+      "cwd": "axiom-skills",
+      "exit_code": 0,
+      "id": "owner-tests",
+      "output": "evidence/K-101/owner-tests.txt",
+      "output_sha256": "a28002ba30ec41fdb9ea592fc5d53c47a5876df01f11e664ca18f0444f7d8b0a"
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "--offline",
+        "--python",
+        "3.13",
+        "--with",
+        "pytest",
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_release_manifest_handoff.py",
+        "-k",
+        "corrupt_and_missing or path_escape_and_undeclared",
+        "-q",
+        "--no-header"
+      ],
+      "cwd": "axiom-skills",
+      "exit_code": 0,
+      "id": "negative-tests",
+      "output": "evidence/K-101/negative-tests.txt",
+      "output_sha256": "2a3f01549d8af90ab8c57019b72cb555304777edbfa2b1af03029cd42da94d9a"
+    },
+    {
+      "command": [
+        "python3",
+        "release/verify_manifest.py"
+      ],
+      "cwd": "axiom-skills",
+      "exit_code": 0,
+      "id": "manifest",
+      "output": "evidence/K-101/manifest.txt",
+      "output_sha256": "2d54a92a29e995519c8335205bd6f47805bd1dd408cb8feaf78ab9e936c8ac24"
+    },
+    {
+      "command": [
+        "python3",
+        "release/build_plugin_bundle.py"
+      ],
+      "cwd": "axiom-skills",
+      "exit_code": 0,
+      "id": "plugin",
+      "output": "evidence/K-101/plugin.txt",
+      "output_sha256": "1c8bc4e1109e45c1e229b246e9fdf358a474e208550f95761ae4d125047a53d2"
+    },
+    {
+      "command": [
+        "python3",
+        "evidence/K-101/verify_archive.py"
+      ],
+      "cwd": "axiom-skills",
+      "exit_code": 0,
+      "id": "consumer-archive",
+      "output": "evidence/K-101/consumer-archive.txt",
+      "output_sha256": "c3e4a9c8e7193db01950982d5e6903dad4bff030825211134dc054a70980ef61"
+    }
+  ],
+  "host": {
+    "arch": "x86_64",
+    "os": "Darwin",
+    "os_version": "26.7"
+  },
+  "provenance": "candidate",
+  "source_revision": "eade281614677f96fd86260dc28e1fe0cbdeac0a",
+  "spec_revision": "39759ac2311206059b00c44179a998f502e4e777",
+  "task_id": "K-101"
+}
