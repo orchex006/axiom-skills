@@ -154,7 +154,7 @@
     "evidence_commit": "d3128d01b061435384da426dc692b8cba7d80e75",
     "main_integrated": false,
     "release_state": "candidate",
-    "evidence_remote_verified": false
+    "evidence_remote_verified": true
   },
   "next_consumer": "K-105 macos-x64 distribution install; unpack owner-source.tar and verify its skills-manifest.json before conversion"
 }
