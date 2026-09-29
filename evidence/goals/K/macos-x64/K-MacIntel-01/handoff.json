@@ -151,9 +151,10 @@
     "source_branch": "feature/k-101-owner-bundle",
     "source_commit": "eade281614677f96fd86260dc28e1fe0cbdeac0a",
     "source_remote_verified": true,
-    "evidence_commit": "pending",
+    "evidence_commit": "d3128d01b061435384da426dc692b8cba7d80e75",
     "main_integrated": false,
-    "release_state": "candidate"
+    "release_state": "candidate",
+    "evidence_remote_verified": false
   },
   "next_consumer": "K-105 macos-x64 distribution install; unpack owner-source.tar and verify its skills-manifest.json before conversion"
 }

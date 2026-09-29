@@ -27,6 +27,7 @@ host configuration is untouched. This owner payload is portable; K-105 must
 prove installed Mac Intel consumption and the final CLI result separately.
 
 The source feature commit was pushed to the canonical owner remote and the
-remote SHA matched. Evidence delivery, canonical after-stage validation and
-main integration are tracked separately in `handoff.json`. No release, tag,
+remote SHA matched. Evidence was committed at `d3128d01b061435384da426dc692b8cba7d80e75`;
+canonical after-stage validation and main integration are tracked separately
+in `handoff.json`. No release, tag,
 signing, certification or native host adapter proof is claimed.
