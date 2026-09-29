@@ -1,0 +1,31 @@
+{
+  "task_id": "K-401",
+  "lane": "container-linux-x64",
+  "status": "local_candidate_handoff",
+  "certified": false,
+  "portable_payload_source_revision": "eade281614677f96fd86260dc28e1fe0cbdeac0a",
+  "owner_evidence_base_revision": "4781139f19dd38388f4bade01088f8164452b8a6",
+  "spec_revision": "39759ac2311206059b00c44179a998f502e4e777",
+  "consumer_format": "full owner source archive for CLI engine bundle conversion",
+  "archive": {
+    "path": "evidence/K-101/owner-source.tar",
+    "sha256": "e4b6a013b4971d93298886655debef5b11b912ca7a881c2ab1648477124b1a3a"
+  },
+  "manifest": {
+    "path": "release/skills-manifest.json",
+    "sha256": "ddba13d7d5608e58c6f8f4599c133b86f0ddbc62257b98bfe73d5c207bea8d1a"
+  },
+  "spec_lock": {
+    "path": "spec.lock.json",
+    "sha256": "288b2491d39762d8225315c976096ac51c1ea76ff50fd813e3b4ca7655269661"
+  },
+  "container_check": {
+    "image_id": "sha256:2325bb286ec344af3e5898cc224b5844e2707ac6e26b1632516fd3edc84a5e26",
+    "os": "Debian GNU/Linux 12",
+    "arch": "x86_64",
+    "python": "3.13.15",
+    "command": "docker run --rm --platform linux/amd64 -v <axiom-skills>:/repo:ro -w /repo --entrypoint python3 <image-id> evidence/K-101/verify_archive.py",
+    "result": "archive_members=42 exit=0"
+  },
+  "limitations": "Portable bundle proof only; CLI installed consumption, lifecycle, release signing and certification remain unverified."
+}

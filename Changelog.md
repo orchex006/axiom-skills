@@ -5,6 +5,15 @@ version; entries below are unreleased working-tree changes, not a published rele
 
 ## Unreleased
 
+### K-401 container lane owner bundle candidate
+
+Reuse the exact K-101 portable 41-file payload and immutable K-012 spec pin for
+the container consumer. Verify the owner archive and manifest again, including
+corrupt, missing, undeclared and path-escape refusals. A read-only Linux x64
+container consumed the same archive without changing its bytes. The bundle
+remains a local candidate; installed runtime, release signing and platform
+certification belong to later tasks.
+
 ### K-101 Mac Intel owner bundle candidate
 
 Pin the K-012 draft scope revision in the owner lock and full 41-file manifest.
