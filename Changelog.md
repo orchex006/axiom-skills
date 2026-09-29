@@ -5,6 +5,15 @@ version; entries below are unreleased working-tree changes, not a published rele
 
 ## Unreleased
 
+### K-101 Mac Intel owner bundle candidate
+
+Pin the K-012 draft scope revision in the owner lock and full 41-file manifest.
+Keep the candidate explicitly unreleased. Refuse manifest path traversal and
+symlink payloads before reading or packaging. Add corrupt, missing, undeclared
+and escape regressions; the distribution can convert the complete owner payload
+to the engine bundle without a substitute fixture. Local bundle verification
+does not certify an installed host or publish a release.
+
 ### K-011 owner skills closure candidate
 
 Pin the reviewed specification revision in the source manifest and record

@@ -50,7 +50,13 @@ def declared_scopes(manifest: dict) -> list[str]:
     scopes = policy.get("declared_scope")
     if not isinstance(scopes, list):
         return []
-    return [s.strip("/").replace("\\", "/") for s in scopes if isinstance(s, str) and s.strip("/")]
+    return [s for s in scopes if isinstance(s, str) and s]
+
+
+def portable_relative(value: str) -> bool:
+    """Reject traversal and platform-specific absolute paths before any file read."""
+    return (bool(value) and "\\" not in value and not value.startswith("/")
+            and ":" not in value and all(part not in ("", ".", "..") for part in value.split("/")))
 
 
 def verify(manifest_path: Path, root: Path) -> list[str]:
@@ -74,7 +80,9 @@ def verify(manifest_path: Path, root: Path) -> list[str]:
         if not isinstance(rel, str) or not rel:
             problems.append("manifest file entry is missing a path")
             continue
-        rel = rel.replace("\\", "/")
+        if not portable_relative(rel):
+            problems.append(f"unsafe declared path: {rel}")
+            continue
         if rel in declared:
             problems.append(f"duplicate declaration fails install: {rel}")
             continue
@@ -90,6 +98,12 @@ def verify(manifest_path: Path, root: Path) -> list[str]:
         elif capabilities not in (None, []):
             problems.append(f"non-executable declares script capabilities: {rel}")
         target = root / rel
+        if target.is_symlink() or any(
+            (root / ancestor).is_symlink()
+            for ancestor in Path(rel).parents if str(ancestor) != "."
+        ):
+            problems.append(f"declared file is a symlink: {rel}")
+            continue
         if not target.is_file():
             problems.append(f"declared file is missing: {rel}")
             continue
@@ -102,11 +116,17 @@ def verify(manifest_path: Path, root: Path) -> list[str]:
     if not scopes:
         problems.append("manifest declares no install scope")
     for scope in scopes:
+        if not portable_relative(scope):
+            problems.append(f"unsafe declared scope: {scope}")
+            continue
         base = root / scope
         if not base.exists():
             problems.append(f"declared scope is missing: {scope}")
             continue
         for found in sorted(base.rglob("*")):
+            if found.is_symlink():
+                problems.append(f"symlink inside declared scope fails install: {found.relative_to(root).as_posix()}")
+                continue
             if not found.is_file():
                 continue
             rel = found.relative_to(root).as_posix()

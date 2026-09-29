@@ -3,9 +3,9 @@
   "component": "axiom-skills",
   "component_version": "0.1.0",
   "channel": "experimental",
-  "released": true,
+  "released": false,
   "spec_version": "2.0.0-draft.1",
-  "spec_revision": "6b23ea78e19902726edf40dbd9c15bda27c91ebb",
+  "spec_revision": "39759ac2311206059b00c44179a998f502e4e777",
   "install_policy": {
     "declared_scope": [
       "policy",

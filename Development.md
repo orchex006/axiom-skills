@@ -13,7 +13,7 @@ Take only tasks whose `repo` is `axiom-skills`. Skill behavior, hook contracts, 
 
 ## Pinned governance
 
-Canonical workflow คือ `Development.md` ใน `axiom-specs` ณ revision ที่ `spec.lock.json` pin ไว้ (ถ้า repository นี้มี pin) และ workspace `AGENTS.md` ที่ `D:\SP-Billy\axiom\AGENTS.md`
+Canonical workflow คือ `Development.md` ใน `axiom-specs` ณ revision ที่ `spec.lock.json` pin ไว้ และ `AGENTS.md` ของ workspace ที่ครอบคลุม checkout จริง ตรวจ root ด้วย `git rev-parse --show-toplevel` ไม่ใช้ path ของเครื่องอื่นเป็น prerequisite
 
 Skill เป็นส่วนของ operational workflow แต่การมี skill ไม่ทำให้ข้าม governance ได้: skill MUST NOT สั่งให้ ignore, summarize away, replace, disable หรือ bypass `AGENTS.md` หรือ `Development.md` ที่ใช้บังคับอยู่ และ bootstrap ที่จัดการ governance MUST preserve human-owned instructions และ verify effective governance ก่อนเริ่มงาน
 
@@ -88,7 +88,7 @@ Merge เข้า `release/vX.Y.Z`, การ tag, การ publish skill bund
 งานที่ทำใน worktree MUST NOT จบอยู่แค่ใน worktree เมื่อ task verified แล้ว MUST:
 
 1. integrate เข้า `main` ตาม merge gate ข้างต้น; และ
-2. อัปเดต checkout หลัก (`D:\SP-Billy\axiom\axiom-skills`) ให้ตรงกับ branch ที่ integrate แล้ว เมื่อ working tree ของ checkout นั้นสะอาดพอ; หรือ
+2. อัปเดต checkout หลักที่ตรวจพบด้วย `git worktree list` ให้ตรงกับ branch ที่ integrate แล้ว เมื่อ working tree ของ checkout นั้นสะอาดพอ; หรือ
 3. ถ้าทำไม่ได้เพราะมีงานที่ยังไม่ commit ของเจ้าของ checkout ให้ preserve งานนั้นไว้ และรายงานชัดเจนว่า checkout หลักยังไม่ได้รับงาน พร้อมขั้นตอนถัดไปที่เฉพาะเจาะจง
 
 ห้ามรายงานว่างาน "เสร็จ" โดยไม่ระบุว่า checkout หลักได้งานแล้วหรือยัง

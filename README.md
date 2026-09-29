@@ -120,23 +120,24 @@ unverified.
 
 ## Specification pin
 
-`spec.lock.json` pins the immutable `axiom-specs` revision this bundle was
-reviewed against, plus a SHA256 digest for each contract it consumes. It is an
-**unapproved draft pin**: no released specification revision exists, so the pin is
-not owner approval and carries no release coverage.
+`spec.lock.json` pins the immutable K-012 `axiom-specs` draft revision this bundle
+was reviewed against, plus a SHA256 digest for each contract it consumes. The
+pin passes coverage validation; this does not publish the specification or
+certify a product release.
 
-Validate the pin offline. The validator is canonical in `axiom-specs`
-(`tools/spec-lock-check.py`) and is not shipped in this bundle, so run it from an
-`axiom-specs` checkout and point `--lock` at this repository's `spec.lock.json`:
+Validate the pin offline against the exact immutable K-012 revision. The
+validator is canonical in `axiom-specs` (`tools/spec-lock-check.py`) and is not
+shipped in this bundle. From an archive of pinned revision
+`39759ac2311206059b00c44179a998f502e4e777`, point `--lock` at this
+repository's `spec.lock.json`:
 
 ```bash
-python tools/spec-lock-check.py --lock ../axiom-skills/spec.lock.json --spec-root .
+python tools/spec-lock-check.py --lock ../axiom-skills/spec.lock.json --spec-root . --release --json
 ```
 
-Default mode must accept (`immutable revision and pinned digests verified`).
-`--release` deliberately still rejects with
-`release-coverage-missing:conformance/fixture-index.json`, because release
-coverage is only meaningful against a released revision.
+Use `--release --json` to check the pin's required coverage. The `--release`
+flag here validates pin coverage only; the revision remains a draft feature
+revision pending independent review and main integration.
 
 ## Install and release status
 
@@ -144,14 +145,25 @@ coverage is only meaningful against a released revision.
 approval only: `requires_explicit_human_approval: true` and a fail-closed policy
 where a missing file, a hash mismatch, a byte-count mismatch, an unknown file or a
 duplicate declaration each `fail`. The bundle is `released: false` on channel
-`draft`; there is no released artifact, no tag and no certification.
+`experimental`; the K-101 candidate is `released: false` and has no new tag or
+certification. The complete 41-file owner payload can be supplied to the
+distribution converter with `release/skills-manifest.json` at its root. The
+converter builds the engine-format `skills/bundle.json` from these exact owner
+bytes; a minimal fixture is insufficient.
+
+For a local consumer candidate, run `python3 release/verify_manifest.py`, then
+`python3 release/build_engine_source.py --out <new-empty-path>`. The output has
+`skills-manifest.json` and all 41 declared payload paths at its root. Supply
+that root to the distribution's owner-manifest conversion path. The builder
+refuses an existing output path, missing or changed bytes, and undeclared files.
 
 ## Platform support status
 
-Windows x64, Linux x64, macOS arm64 and macOS x64 are required native targets. No
-target is certified and this repository ships no native install/run/uninstall
-evidence. Host adapter behaviour is version-specific and is never inferred from
-compilation or from a passing in-repository test.
+The required release lanes are Windows x64, WSL2 Linux x64, container Linux x64
+and macOS Intel x64. macOS arm64 has separate optional local tasks and remains
+deferred for release. No lane is certified by this portable bundle check. Host
+adapter behaviour is version-specific and is never inferred from a passing
+in-repository test.
 
 ## Documentation
 
