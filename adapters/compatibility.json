@@ -109,7 +109,7 @@
           "test_class": "CodexStopHookTests"
         }
       ],
-      "adapter_version": "0.1.0",
+      "adapter_version": "0.1.1",
       "protocol_version": 1,
       "version_probe": "not_run",
       "installed_version": null,
@@ -188,7 +188,7 @@
           "test_class": "ClaudeTaskCompletedHookTests"
         }
       ],
-      "adapter_version": "0.1.0",
+      "adapter_version": "0.1.1",
       "protocol_version": 1,
       "version_probe": "not_run",
       "installed_version": null,
@@ -262,7 +262,7 @@
           "test_class": "GeminiAfterAgentHookTests"
         }
       ],
-      "adapter_version": "0.1.0",
+      "adapter_version": "0.1.1",
       "protocol_version": 1,
       "version_probe": "not_run",
       "installed_version": null,
@@ -344,7 +344,7 @@
           "test_class": "AntigravityStopHookTests"
         }
       ],
-      "adapter_version": "0.1.0",
+      "adapter_version": "0.1.1",
       "protocol_version": 1,
       "version_probe": "not_run",
       "installed_version": null,

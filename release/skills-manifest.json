@@ -190,7 +190,7 @@
     {
       "path": "adapters/compatibility.json",
       "role": "host-adapter-compatibility",
-      "sha256": "7a3a9b9368caaa07022ae3b558a637fcf19250bf7868c68371fd8c22679c3acf",
+      "sha256": "0d05244025143ceca5e4762ba44171f87eba12b3807cf47ba226659ec574f684",
       "bytes": 13468
     },
     {
