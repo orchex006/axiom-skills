@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "component": "axiom-skills",
-  "component_version": "0.1.0",
+  "component_version": "0.1.1",
   "channel": "experimental",
   "released": false,
   "spec_version": "2.0.0-draft.1",
