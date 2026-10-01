@@ -1,0 +1,23 @@
+{
+  "task_id": "K-301",
+  "source_repo": "axiom-skills",
+  "source_revision": "26f862039a31800bda9809a0bda5e58f5d96ab98",
+  "spec_revision": "6584470ffede0926029147efa40732f3d3a8bf16",
+  "lane": "windows-x64",
+  "kind": "local_artifact",
+  "provenance": "candidate",
+  "certified": false,
+  "consumer": "K-305",
+  "bundle": {
+    "path": "evidence/K-301/owner-source.tar",
+    "sha256": "4ec6b778c17e180846d8074e7d637f8cd19dfdc01a909121cd6f1e51c3ee067c"
+  },
+  "manifest": {
+    "path": "release/skills-manifest.json",
+    "sha256": "1954011f86284d17e1f535373e0557156b5b3a1b3a9ebbefb670f55feba2ace9"
+  },
+  "spec_lock_sha256": "b3b05869507c9a7051eafdbf01148c9114ef2c172f264e1c6f86e1930e67bc60",
+  "build_command": "python evidence/K-301/build_handoff.py (cwd axiom-skills)",
+  "bundle_files": 41,
+  "native_install_claim": false
+}
