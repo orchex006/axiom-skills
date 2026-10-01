@@ -9,6 +9,14 @@ version; entries below are unreleased working-tree changes, not a published rele
 
 ## Unreleased
 
+### K-301 Windows owner bundle candidate
+
+Use the active Python interpreter for owner payload staging on Windows. Align
+distribution guidance and its contract checks with ADR-0020, pin the immutable
+three-lane specification, and regenerate the portable plugin and manifest hashes.
+Record actual Windows bundle verification and failure-boundary evidence for the
+downstream K-305 consumer; installed runtime and release certification remain separate.
+
 ### K-401 container lane owner bundle candidate
 
 Reuse the exact K-101 portable 41-file payload and immutable K-012 spec pin for

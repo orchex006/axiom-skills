@@ -1,0 +1,6 @@
+cwd=axiom-skills
+command=python evidence/K-301/build_handoff.py
+exit=0
+OK owner engine source: 41 files; manifest=skills-manifest.json
+OK skills bundle verification: component=axiom-skills version=0.1.1 channel=experimental files=41 scopes=policy,skills,adapters,plugins,.agents/plugins,.claude-plugin,marketplace-plugins
+{"artifact": "evidence/K-301/owner-source.tar", "certified": false, "members": 42, "payload_files": 41, "sha256": "4ec6b778c17e180846d8074e7d637f8cd19dfdc01a909121cd6f1e51c3ee067c", "spec_revision": "6584470ffede0926029147efa40732f3d3a8bf16"}

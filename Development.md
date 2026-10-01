@@ -40,6 +40,12 @@ Skill เป็นส่วนของ operational workflow แต่การ�
 
 ## Required checks
 
+K-301 verifies the complete owner bundle on native Windows Python using the active
+interpreter. The owner pin includes ADR-0020 and its three required release lanes;
+WSL2 remains a deferred lane. Build and verify the staged owner payload with
+`release/build_engine_source.py` and `release/verify_manifest.py`. This artifact
+handoff does not establish installed Windows runtime or release certification.
+
 ```text
 python -m pytest tests -q
 ```

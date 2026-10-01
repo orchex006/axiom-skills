@@ -1,0 +1,22 @@
+cwd=axiom-skills
+command=python -m pytest tests/test_release_manifest_handoff.py -v
+exit=0
+local absolute interpreter and checkout paths redacted from recorded output
+============================= test session starts =============================
+platform win32 -- Python 3.13.14, pytest-9.1.1, pluggy-1.6.0 -- <active-python>
+cachedir: .pytest_cache
+rootdir: <axiom-skills checkout>
+plugins: anyio-4.14.2, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 8 items
+
+tests/test_release_manifest_handoff.py::test_owner_manifest_pins_spec_and_reviews_every_executable PASSED [ 12%]
+tests/test_release_manifest_handoff.py::test_missing_spec_revision_refuses PASSED [ 25%]
+tests/test_release_manifest_handoff.py::test_unreviewed_executable_refuses PASSED [ 37%]
+tests/test_release_manifest_handoff.py::test_unknown_capability_refuses PASSED [ 50%]
+tests/test_release_manifest_handoff.py::test_corrupt_and_missing_payload_refuse PASSED [ 62%]
+tests/test_release_manifest_handoff.py::test_path_escape_and_undeclared_payload_refuse PASSED [ 75%]
+tests/test_release_manifest_handoff.py::test_full_owner_payload_stages_for_distribution_converter PASSED [ 87%]
+tests/test_release_manifest_handoff.py::test_windows_absolute_and_alternate_paths_refuse PASSED [100%]
+
+============================== 8 passed in 1.25s ==============================

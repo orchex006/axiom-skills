@@ -5,7 +5,7 @@
   "channel": "experimental",
   "released": false,
   "spec_version": "2.0.0-draft.1",
-  "spec_revision": "39759ac2311206059b00c44179a998f502e4e777",
+  "spec_revision": "6584470ffede0926029147efa40732f3d3a8bf16",
   "install_policy": {
     "declared_scope": [
       "policy",
@@ -84,8 +84,8 @@
     {
       "path": "skills/axiom-cli-install/SKILL.md",
       "role": "skill",
-      "sha256": "d2352e9027480e0696620a015b9b91fc58df0a04ab8456b5aca0af5ec4cd9631",
-      "bytes": 14151
+      "sha256": "e2b395becccab962248187de1838af4c34d8cc1da0fae2ff7d4813418782faff",
+      "bytes": 14246
     },
     {
       "path": "adapters/codex/instructions.md",
@@ -238,8 +238,8 @@
     {
       "path": "plugins/axiom/skills/axiom-cli-install/SKILL.md",
       "role": "plugin-package",
-      "sha256": "d2352e9027480e0696620a015b9b91fc58df0a04ab8456b5aca0af5ec4cd9631",
-      "bytes": 14151
+      "sha256": "e2b395becccab962248187de1838af4c34d8cc1da0fae2ff7d4813418782faff",
+      "bytes": 14246
     },
     {
       "path": "plugins/axiom/skills/graph-checkpoint/SKILL.md",

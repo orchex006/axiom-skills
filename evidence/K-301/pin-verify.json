@@ -1,0 +1,8 @@
+{
+  "command": "python tools/spec-lock-check.py --lock <owner>/spec.lock.json --spec-root <immutable-git-blobs> --release --json",
+  "spec_revision": "6584470ffede0926029147efa40732f3d3a8bf16",
+  "cwd": "axiom-specs",
+  "exit_code": 0,
+  "ok": true,
+  "reasons": []
+}

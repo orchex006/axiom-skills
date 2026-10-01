@@ -56,8 +56,8 @@ authority.
 2. when the pin does not contain an authority this skill names, record `authority-absent-at-pin`
    with that exact command and its exit code, then resolve the authority at the newest immutable
    revision of `axiom-specs` that does contain it and record that revision sha in the report. The
-   distribution contract and the `axiom-cli` distribution guide are both newer than the pin
-   currently recorded in `spec.lock.json`, so this branch is the expected one today;
+   distribution contract and the `axiom-cli` distribution guide must both be checked at the
+   recorded pin; do not assume either authority is absent from that revision;
 3. when an authority cannot be resolved at any immutable revision, stop: report the path as
    unresolved and refuse the install. Do not work from memory, from a directory listing or from an
    earlier session's copy, and do not advance `spec.lock.json` yourself - a pin that is older than
@@ -69,7 +69,9 @@ authority.
    distribution contract section 7 dependency table record, per prerequisite, the component that
    needs it, the manifest or document that proves its version, whether it is mandatory and whether
    it needs elevation. From section 4 release tiers record which platforms are finish-first and
-   which are deferred. All four finish-first execution lanes are release-blocking. A prerequisite whose owning repository has not pinned a
+   which are deferred. Apply the accepted scope amendment ADR-0020: Windows x64, container
+   Linux x64 and Mac Intel are the three required lanes; WSL2 is deferred and nonblocking.
+   A prerequisite whose owning repository has not pinned a
    version is recorded as `undeclared-pending-<task>`; the distribution must not guess a version,
    and no release tier may be relaxed, removed or re-labelled.
 

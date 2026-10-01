@@ -1141,8 +1141,8 @@ class DistributionAgreementChecks:
         (8, "evidence and verification"),
         (9, "forbidden set"),
     )
-    FINISH_FIRST = ("windows-x64", "wsl2-linux-x64", "container-linux-x64", "macos-x64")
-    DEFERRED = ("linux-x64", "macos-arm64")
+    FINISH_FIRST = ("windows-x64", "container-linux-x64", "macos-x64")
+    DEFERRED = ("linux-x64", "wsl2-linux-x64", "macos-arm64")
     MANDATORY = ("rust-toolchain", "python-interpreter", "sqlite-driver")
     NON_MANDATORY = ("nodejs", "wsl", "docker", "bash")
     FORBIDDEN_PINS = ("main", "master", "develop", "latest", "HEAD", "*")
