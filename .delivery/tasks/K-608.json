@@ -1,8 +1,10 @@
 {
   "task_id": "K-608",
-  "status": "local_verified",
+  "status": "done",
   "branch": "feature/k-608-canonical-bootstrap-bundle",
   "file_count": 44,
   "verification": "220 pytest tests, owner manifest and canonical/plugin parity passed",
-  "delivery_state": "committed"
+  "delivery_state": "pushed",
+  "source_revision": "00c6a281ecb0d2803d10456dc6650465bbdcc0f7",
+  "ci_url": "https://github.com/orchex006/axiom-skills/actions/runs/37188893792"
 }
