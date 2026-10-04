@@ -149,14 +149,14 @@ revision pending independent review and main integration.
 `release/skills-manifest.json` declares the bundle installed by explicit human
 approval only: `requires_explicit_human_approval: true` and a fail-closed policy
 where a missing file, a hash mismatch, a byte-count mismatch, an unknown file or a
-duplicate declaration each `fail`. The current manifest describes an unpublished `experimental` candidate. Historical K-101 release records remain unchanged. The complete 41-file owner payload can be supplied to the
+duplicate declaration each `fail`. The current manifest describes an unpublished `experimental` candidate. Historical K-101 release records remain unchanged. The complete 44-file owner payload can be supplied to the
 distribution converter with `release/skills-manifest.json` at its root. The
 converter builds the engine-format `skills/bundle.json` from these exact owner
 bytes; a minimal fixture is insufficient.
 
 For a local consumer candidate, run `python3 release/verify_manifest.py`, then
 `python3 release/build_engine_source.py --out <new-empty-path>`. The output has
-`skills-manifest.json` and all 41 declared payload paths at its root. Supply
+`skills-manifest.json` and all 44 declared payload paths at its root. Supply
 that root to the distribution's owner-manifest conversion path. The builder
 refuses an existing output path, missing or changed bytes, and undeclared files.
 
@@ -175,3 +175,7 @@ pinned revision, never as a local editable copy.
 ## Public CI specification boundary
 
 The specification repository is private. Public skills CI validates the immutable owner pin metadata, bundle bytes, portable packaging and available owner tests without fetching private specification content. Exact contract-byte verification is recorded by the authorized specification handoff. Tests requiring a separate specification checkout report skipped on public CI; they are not relabelled passed. No cross-repository token or private source publication is required.
+
+## K-608 canonical bootstrap content
+
+The portable owner payload includes the exact block, gitignore fragment and template manifest under templates/bootstrap. Graphd consumes these owner-pinned bytes instead of hardcoding another policy source. The policy remains a single file at policy/POLICY.md. No template bytes, human governance or OS-specific skill copies are changed.

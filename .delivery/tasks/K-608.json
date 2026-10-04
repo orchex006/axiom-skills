@@ -1,0 +1,8 @@
+{
+  "task_id": "K-608",
+  "status": "local_verified",
+  "branch": "feature/k-608-canonical-bootstrap-bundle",
+  "file_count": 44,
+  "verification": "220 pytest tests, owner manifest and canonical/plugin parity passed",
+  "delivery_state": "committed"
+}
