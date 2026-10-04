@@ -86,7 +86,7 @@ def test_full_owner_payload_stages_for_distribution_converter(tmp_path: Path) ->
     assert built.returncode == 0, built.stdout + built.stderr
     assert (output / "skills-manifest.json").read_bytes() == MANIFEST.read_bytes()
     assert verify(output / "skills-manifest.json", output) == []
-    assert len(json.loads(MANIFEST.read_text())["files"]) == 41
+    assert len(json.loads(MANIFEST.read_text())["files"]) == 44
     for row in json.loads(MANIFEST.read_text())["files"]:
         assert (output / row["path"]).read_bytes() == (ROOT / row["path"]).read_bytes()
     refused = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)

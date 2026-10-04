@@ -14,7 +14,8 @@
       "plugins",
       ".agents/plugins",
       ".claude-plugin",
-      "marketplace-plugins"
+      "marketplace-plugins",
+      "templates/bootstrap"
     ],
     "missing_files": "fail",
     "hash_mismatch": "fail",
@@ -306,6 +307,24 @@
       "role": "plugin-marketplace",
       "sha256": "2f2790857fad4ea17e69b5b302edd37f1d8aefb5c37e9d1a690414debf252eef",
       "bytes": 275
+    },
+    {
+      "path": "templates/bootstrap/AGENTS.block.md",
+      "role": "bootstrap-content",
+      "sha256": "39c2b714efbcfdf61f62ff60f43616254d4fb855c9babe0c2c871d1be4d06f5d",
+      "bytes": 314
+    },
+    {
+      "path": "templates/bootstrap/gitignore.fragment",
+      "role": "bootstrap-content",
+      "sha256": "8dcda848864ed6321d18c2e11c44055992a13f0275f53f1d32e9c03e1b35849f",
+      "bytes": 1636
+    },
+    {
+      "path": "templates/bootstrap/manifest.json",
+      "role": "bootstrap-content",
+      "sha256": "be134c02a8afaa2e048e9d9512f01ddf165f1e28e3e4ed7e90bd23bd202a84c3",
+      "bytes": 2398
     }
   ]
 }

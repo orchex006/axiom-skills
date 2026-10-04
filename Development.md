@@ -131,3 +131,7 @@ Merge เข้า `release/vX.Y.Z`, การ tag, การ publish skill bund
 ## Public CI specification boundary
 
 The specification repository is private. Public skills CI validates the immutable owner pin metadata, bundle bytes, portable packaging and available owner tests without fetching private specification content. Exact contract-byte verification is recorded by the authorized specification handoff. Tests requiring a separate specification checkout report skipped on public CI; they are not relabelled passed. No cross-repository token or private source publication is required.
+
+## K-608 canonical bootstrap content
+
+The portable owner payload includes the exact block, gitignore fragment and template manifest under templates/bootstrap. Graphd consumes these owner-pinned bytes instead of hardcoding another policy source. The policy remains a single file at policy/POLICY.md. No template bytes, human governance or OS-specific skill copies are changed.

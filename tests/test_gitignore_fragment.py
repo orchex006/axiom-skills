@@ -207,12 +207,12 @@ class GitignoreFragmentStructureTests(unittest.TestCase):
         self.assertEqual(hashlib.sha256(data).hexdigest(), entry["sha256"])
         self.assertEqual(len(data), entry["bytes"])
 
-    def test_fragment_stays_outside_the_hashed_bundle_scope(self) -> None:
+    def test_canonical_fragment_is_inside_the_hashed_bundle_scope(self) -> None:
         manifest = json.loads(read("release/skills-manifest.json"))
         scopes = manifest["install_policy"]["declared_scope"]
-        self.assertEqual(["policy", "skills", "adapters", "plugins", ".agents/plugins", ".claude-plugin", "marketplace-plugins"], scopes)
-        self.assertNotIn("templates", scopes)
-        self.assertNotIn(FRAGMENT, [f["path"] for f in manifest["files"]])
+        self.assertEqual(["policy", "skills", "adapters", "plugins", ".agents/plugins", ".claude-plugin", "marketplace-plugins", "templates/bootstrap"], scopes)
+        self.assertIn("templates/bootstrap", scopes)
+        self.assertIn(FRAGMENT, [f["path"] for f in manifest["files"]])
 
     def test_shipped_manifest_verifier_still_accepts_the_bundle(self) -> None:
         spec = importlib.util.spec_from_file_location(

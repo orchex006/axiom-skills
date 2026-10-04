@@ -1,3 +1,7 @@
+## Unreleased — K-608
+
+- Include the three canonical bootstrap content files in the hash-verified portable owner payload for graphd public bootstrap composition.
+
 ## Unreleased — K-605
 
 - Replace active skills/adapter certification state with evidence; add portable GitHub CI and Release packaging.
