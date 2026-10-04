@@ -15,17 +15,20 @@
   "limitations": [
     "Installed-host runtime remains unverified; this does not gate skills downloads.",
     "Public GitHub CI passed. Private specification agreement cases report skipped there; exact private contract bytes were verified in the authorized local handoff.",
-    "No release tag or publication performed.",
-    "Independent shared-contract review and main integration remain pending."
+    "No release tag or publication performed."
   ],
-  "delivery_state": "pushed",
+  "delivery_state": "integrated",
   "payload_commit": "78b753a3f74927439ee8c85b6909b49c9707fc57",
   "verified_remote_payload_sha": "78b753a3f74927439ee8c85b6909b49c9707fc57",
   "push_remote": "https://github.com/orchex006/axiom-skills.git",
-  "main_integration": "not_performed",
+  "main_integration": "integrated",
   "github_ci": {
     "conclusion": "success",
-    "source_revision": "78b753a3f74927439ee8c85b6909b49c9707fc57",
-    "url": "https://github.com/orchex006/axiom-skills/actions/runs/37181116538"
-  }
+    "source_revision": "a0ae3202d87a55627bf83adbab1ee537147a0199",
+    "url": "https://github.com/orchex006/axiom-skills/actions/runs/37181895574"
+  },
+  "main_merge_commit": "a0ae3202d87a55627bf83adbab1ee537147a0199",
+  "verified_remote_main_sha": "a0ae3202d87a55627bf83adbab1ee537147a0199",
+  "owner_merge_authorization": "merge ได้เลยถ้าเป้าหมายคือ done ได้แบบไม่ต้องใช้ certification",
+  "integration_evidence": "evidence/K-605/integration/delivery.json"
 }
