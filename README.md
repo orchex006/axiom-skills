@@ -171,3 +171,7 @@ in-repository test.
 [docs/README.md](docs/README.md) indexes the guides in this repository. Shared
 normative contracts stay canonical in `axiom-specs` and are resolved through the
 pinned revision, never as a local editable copy.
+
+## Public CI specification boundary
+
+The specification repository is private. Public skills CI validates the immutable owner pin metadata, bundle bytes, portable packaging and available owner tests without fetching private specification content. Exact contract-byte verification is recorded by the authorized specification handoff. Tests requiring a separate specification checkout report skipped on public CI; they are not relabelled passed. No cross-repository token or private source publication is required.

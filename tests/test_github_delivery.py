@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from release.build_github_release import build, verify_source
+from release.verify_spec_pin import verify as verify_pin
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = "a" * 40
@@ -97,3 +98,22 @@ def test_source_binding_rejects_changed_payload(tmp_path):
     (tmp_path / "payload.md").write_text("changed", newline="\n")
     with pytest.raises(ValueError, match="changed release payload"):
         verify_source(tmp_path, revision)
+
+
+@pytest.mark.parametrize("change,reason", [
+    (lambda pin: pin.update(spec_revision="main"), "immutable"),
+    (lambda pin: pin.update(spec_content_sha256="0" * 64), "rollup mismatch"),
+    (lambda pin: pin.update(owner_repository="axiom-mcp"), "wrong pin owner"),
+])
+def test_offline_pin_rejects_drift(tmp_path, change, reason):
+    (tmp_path / "release").mkdir()
+    shutil.copyfile(ROOT / "release/skills-manifest.json", tmp_path / "release/skills-manifest.json")
+    pin = json.loads((ROOT / "spec.lock.json").read_text())
+    change(pin)
+    (tmp_path / "spec.lock.json").write_text(json.dumps(pin))
+    with pytest.raises(ValueError, match=reason):
+        verify_pin(tmp_path)
+
+
+def test_offline_pin_metadata_is_consistent():
+    verify_pin(ROOT)

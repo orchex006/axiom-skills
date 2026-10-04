@@ -127,3 +127,7 @@ Merge เข้า `release/vX.Y.Z`, การ tag, การ publish skill bund
 ## Cross-repository
 
 เมื่อ task กระทบ `axiom-specs`, `axiom-graphd` หรือ `axiom-mcp` ต้องแยก child task ต่อ repository และแต่ละ repository ใช้ branch/verification/commit/push lifecycle ของตัวเอง
+
+## Public CI specification boundary
+
+The specification repository is private. Public skills CI validates the immutable owner pin metadata, bundle bytes, portable packaging and available owner tests without fetching private specification content. Exact contract-byte verification is recorded by the authorized specification handoff. Tests requiring a separate specification checkout report skipped on public CI; they are not relabelled passed. No cross-repository token or private source publication is required.
