@@ -1,0 +1,15 @@
+{
+  "task_id": "K-605",
+  "repository": "axiom-skills",
+  "feature_branch": "feature/k-605-github-skills-release",
+  "feature_head": "196ee837cf7c4642abb964b0647638ade955a2f0",
+  "base_main": "349fa7e8e9be4641d39bafb90b9ffeb63d6d164e",
+  "merge_commit": "a0ae3202d87a55627bf83adbab1ee537147a0199",
+  "remote_main_sha": "a0ae3202d87a55627bf83adbab1ee537147a0199",
+  "delivery_state": "integrated",
+  "canonical_remote": "https://github.com/orchex006/axiom-skills.git",
+  "checkout": "main",
+  "merge_tree": "identical to checked feature source",
+  "user_authorized": true,
+  "certification_required": false
+}
