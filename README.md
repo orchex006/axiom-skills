@@ -1,8 +1,13 @@
 # axiom-skills
 
+## Current GitHub delivery policy
+
+Skills use one portable bundle across OS targets. GitHub Actions verifies tests, payload hashes and plugin parity; GitHub Releases supplies the checked archive with source revision, version and SHA-256 checksum. No certification, code signing or attestation is required. Host runtime results document capabilities and never gate skill downloads. Existing host permissions, updater integrity and approval checks remain unchanged.
+
+
 Reusable Agent Skills, host adapters and the managed-item policy for the Axiom
 Graph Ecosystem. Specification baseline: `2.0.0-draft.1`, component version
-`0.1.0` (experimental unsigned release; host certification remains pending).
+`0.1.1` (portable bundle; installed-host runtime results remain unverified).
 
 **Owner scope:** the eight Agent Skills (the six graph workflow skills plus the
 ecosystem installation skill and the distributed-CLI provisioning skill), the
@@ -60,7 +65,7 @@ match the canonical source before publishing or updating the bundle.
 
 All four host adapters have in-repository implementations, and each one expresses
 the canonical completion gate in its **own** documented decision vocabulary.
-Installed-host runtime certification remains pending; the event name and output
+Installed-host runtime tests remain unverified; the event name and output
 shape differ by host. Choose Codex CLI, Claude Code, Gemini CLI or Antigravity
 (AGY) only after checking the installed version and its recorded capabilities.
 
@@ -93,11 +98,11 @@ surface's paths apply to the other.
 
 ### Version probing
 
-`axiom-skills` claims no host certification. `adapters/compatibility.json` records
-`version_probe: "not_run"`, `certified: false` and
+`axiom-skills` claims no host runtime verification. `adapters/compatibility.json` records
+`version_probe: "not_run"`, `runtime_verified: false` and
 `enforcement_level: "instructions_only"` for all four adapters, because no
 licensed host runtime was available to probe. A documented capability table is not
-certification and an in-repository unit test is not host certification. Before
+runtime verification and an in-repository unit test is not host runtime verification. Before
 wiring an adapter into a repository, probe the exact installed version and record
 it in `compatibility/host-matrix.json`; see
 [docs/host-compatibility.md](docs/host-compatibility.md) and
@@ -120,15 +125,15 @@ unverified.
 
 ## Specification pin
 
-`spec.lock.json` pins the immutable K-012 `axiom-specs` draft revision this bundle
+`spec.lock.json` pins the immutable K-604 `axiom-specs` draft revision this bundle
 was reviewed against, plus a SHA256 digest for each contract it consumes. The
 pin passes coverage validation; this does not publish the specification or
-certify a product release.
+verify a product release.
 
-Validate the pin offline against the exact immutable K-012 revision. The
+Validate the pin offline against the exact immutable K-604 revision. The
 validator is canonical in `axiom-specs` (`tools/spec-lock-check.py`) and is not
 shipped in this bundle. From an archive of pinned revision
-`39759ac2311206059b00c44179a998f502e4e777`, point `--lock` at this
+`51fc8f92a56db0471205f368b6bfeefe434b165d`, point `--lock` at this
 repository's `spec.lock.json`:
 
 ```bash
@@ -144,9 +149,7 @@ revision pending independent review and main integration.
 `release/skills-manifest.json` declares the bundle installed by explicit human
 approval only: `requires_explicit_human_approval: true` and a fail-closed policy
 where a missing file, a hash mismatch, a byte-count mismatch, an unknown file or a
-duplicate declaration each `fail`. The bundle is `released: false` on channel
-`experimental`; the K-101 candidate is `released: false` and has no new tag or
-certification. The complete 41-file owner payload can be supplied to the
+duplicate declaration each `fail`. The current manifest describes an unpublished `experimental` candidate. Historical K-101 release records remain unchanged. The complete 41-file owner payload can be supplied to the
 distribution converter with `release/skills-manifest.json` at its root. The
 converter builds the engine-format `skills/bundle.json` from these exact owner
 bytes; a minimal fixture is insufficient.
@@ -159,9 +162,7 @@ refuses an existing output path, missing or changed bytes, and undeclared files.
 
 ## Platform support status
 
-The required release lanes are Windows x64, WSL2 Linux x64, container Linux x64
-and macOS Intel x64. macOS arm64 has separate optional local tasks and remains
-deferred for release. No lane is certified by this portable bundle check. Host
+There is one portable skills bundle, without an OS/architecture release matrix. Historical K-101/K-201/K-301/K-401 task lanes record consumer handoffs, not separate skill variants or prerequisites for portable release. Invoked runtime and installer artifacts retain their declared target support. Host
 adapter behaviour is version-specific and is never inferred from a passing
 in-repository test.
 

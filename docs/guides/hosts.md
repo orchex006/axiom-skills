@@ -1,5 +1,10 @@
 # Host Setup Guides
 
+## Current GitHub delivery policy
+
+Skills use one portable bundle across OS targets. GitHub Actions verifies tests, payload hashes and plugin parity; GitHub Releases supplies the checked archive with source revision, version and SHA-256 checksum. No certification, code signing or attestation is required. Host runtime results document capabilities and never gate skill downloads. Existing host permissions, updater integrity and approval checks remain unchanged.
+
+
 Owner: `axiom-skills` · Adapter guide version: 1 · Spec baseline: `2.0.0-draft.1`
 
 Audience: an operator or agent that wires the Axiom graph workflow into a supported agent
@@ -7,13 +12,13 @@ host: Codex CLI, Claude Code, Gemini CLI or Antigravity (AGY).
 
 Everything in this guide is **version-specific**. Instruction-file discovery, MCP
 configuration field names and hook events or output schemas are taken from the host
-documentation retrieved on 2026-09-18 (links in [§3](#3-certification-links)) and are bound
+documentation retrieved on 2026-09-18 (links in [§3](#3-host-documentation-links)) and are bound
 to a host's installed version. The adapters under `adapters/` are instruction templates, not
 example configurations and not a claim of installed-host compatibility.
-`adapters/compatibility.json` declares all four adapters `certified: false` with
-`enforcement_level: instructions_only` because no licensed host runtime was available to
-probe. A documented capability table is not certification, and an in-repository unit test is
-not host certification.
+`adapters/compatibility.json` declares all four adapters `runtime_verified: false` with
+`enforcement_level: instructions_only` because no installed host runtime was probed to
+probe. A documented capability table is not runtime verification, and an in-repository unit test is
+not host runtime verification.
 
 ## 1. Before you configure a host
 
@@ -24,7 +29,7 @@ not host certification.
 2. Record the pin in the host matrix `compatibility/host-matrix.json`: the exact installed
    version, the operating system, the surface (`ide` or `cli`), the protocol version, the
    adapter version and each feature status. A capability that was not tested is `not tested`,
-   never `certified`.
+   never `runtime verified`.
 3. Declare the enforcement level explicitly: `instructions_only`, `hook_verified` or
    `ci_verified`. With `instructions_only` the adapter is text only and claims no hook gate.
    An enforcement level must never exceed the evidence behind it.
@@ -54,7 +59,7 @@ Host-specific, and therefore never copied between hosts:
 - the hook event names and the host output decision schema
   ([§6](#6-hooks-loop-guard-cancellation-and-degraded-policy)).
 
-## 3. Certification links
+## 3. Host documentation links
 
 The table below is the documentation evidence this guide is grounded in. Each row was
 retrieved with an HTTPS `GET` (`urllib`, `User-Agent
@@ -77,11 +82,11 @@ decoded body. The raw retrieval log and its SHA256 are preserved at
 | S17 | Gemini | hooks | https://geminicli.com/docs/hooks/ | HTTP 200 | `AfterAgent`, `AfterTool` |
 | S18 | Gemini | MCP | https://geminicli.com/docs/tools/mcp-server/ | HTTP 200 | `httpUrl` |
 
-These are host documentation references, not host certification. The source registry
+These are host documentation references, not host runtime verification. The source registry
 `axiom-specs/research/SOURCES.md` defines S01–S28; the rows above are its S09–S20 host
-entries. Because no licensed host runtime was probed, `adapters/compatibility.json` records
-`certified_adapters: 0` and `host_runtime_tests_run: 0`, and every adapter carries an explicit
-certification blocker. Certification of a host requires a probed exact installed version, a
+entries. Because no installed host runtime was probed, `adapters/compatibility.json` records
+`runtime_verified_adapters: 0` and `host_runtime_tests_run: 0`, and every adapter carries an explicit
+runtime limitation. Runtime verification of a host requires a probed exact installed version, a
 tested operating system, a protocol version, a host runtime test artifact and its SHA256, and
 an enforcement level the evidence supports. Until those exist, read this guide as documented
 and in-repository tested behaviour only, and mark host status `not tested`.
@@ -199,7 +204,7 @@ cancellation or uninstall path.
 - Instruction loading: repository `AGENTS.md`, managed block only [S09].
 - Hook: `Stop` → `{"decision": "block", "reason": "..."}` (`codex-stop-v1`) [S11].
 - MCP: `url` plus `bearer_token_env_var` [S10].
-- Status: documented and in-repository tested, not certified.
+- Status: documented and in-repository tested, not runtime verified.
 
 ### Claude Code
 
@@ -211,7 +216,7 @@ cancellation or uninstall path.
   `TaskCompleted` → `{"decision": "block", "reason": "..."}`
   (`claude-task-completed-v1`); `TaskCompleted` is not every turn [S12].
 - MCP: native `type` plus `url`; `mcpServers` [S20].
-- Status: documented and in-repository tested, not certified.
+- Status: documented and in-repository tested, not runtime verified.
 
 ### Gemini CLI
 
@@ -223,7 +228,7 @@ cancellation or uninstall path.
   `retry_after_ms` when the host reports it (`gemini-after-agent-v1`); retry and halt policy is
   the host's own, not the Claude shape.
 - MCP: `httpUrl` [S18].
-- Status: documented and in-repository tested, not certified.
+- Status: documented and in-repository tested, not runtime verified.
 
 ### Antigravity (AGY)
 
@@ -237,4 +242,4 @@ cancellation or uninstall path.
 - Hooks: `Stop` → `{"decision": "continue", "reason": "..."}` (`antigravity-stop-v1`)
   [S16]; `PostToolUse` carries a cheap change hint only.
 - MCP: `serverUrl` [S15].
-- Status: documented and in-repository tested, not certified.
+- Status: documented and in-repository tested, not runtime verified.

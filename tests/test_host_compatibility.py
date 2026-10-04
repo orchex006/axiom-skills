@@ -64,8 +64,8 @@ SHARED_TOKENS: tuple[str, ...] = (
     "host permissions",
     "never override host permissions",
     "host approval",
-    "certified_adapters: 0",
-    "not certified",
+    "runtime_verified_adapters: 0",
+    "not runtime verified",
     "independent",
 )
 
@@ -81,8 +81,8 @@ PROVIDER_OVERRIDE_RE = re.compile(
     re.I,
 )
 INDEPENDENT_VERSION_RE = re.compile(r"\b(?:documentation|docs)\s+version:\s*`?\d", re.I)
-CERTIFIED_TRUE_RE = re.compile(
-    r'"certified"\s*:\s*true|certified\s*:\s*true|certified_adapters:\s*[1-9]', re.I
+RUNTIME_VERIFIED_TRUE_RE = re.compile(
+    r'"runtime_verified"\s*:\s*true|runtime verified\s*:\s*true|runtime_verified_adapters:\s*[1-9]', re.I
 )
 
 
@@ -184,20 +184,20 @@ class HostCompatibilityChecks:
                     problems.append(f"{host}: marked verified without a tested operating system")
                 if not EVIDENCE_RE.search(body):
                     problems.append(f"{host}: marked verified without a runtime evidence sha256")
-            elif CERTIFIED_TRUE_RE.search(body):
-                problems.append(f"{host}: unverified section claims certification")
+            elif RUNTIME_VERIFIED_TRUE_RE.search(body):
+                problems.append(f"{host}: unverified section claims runtime verification")
         return problems
 
     @classmethod
-    def certification_problems(cls, text: str) -> list[str]:
+    def runtime_verification_problems(cls, text: str) -> list[str]:
         problems: list[str] = []
         flat = flatten(text)
-        if "certified_adapters: 0" not in flat:
-            problems.append("guide does not report certified_adapters: 0")
-        if "not certified" not in flat:
-            problems.append("guide does not state that the adapters are not certified")
-        if CERTIFIED_TRUE_RE.search(text):
-            problems.append("guide claims certification that no host evidence supports")
+        if "runtime_verified_adapters: 0" not in flat:
+            problems.append("guide does not report runtime_verified_adapters: 0")
+        if "not runtime verified" not in flat:
+            problems.append("guide does not state that the adapters are not runtime verified")
+        if RUNTIME_VERIFIED_TRUE_RE.search(text):
+            problems.append("guide claims runtime verification that no host evidence supports")
         return problems
 
     @classmethod
@@ -207,7 +207,7 @@ class HostCompatibilityChecks:
             + cls.version_inheritance_problems(text)
             + cls.permission_problems(text)
             + cls.probe_status_problems(text)
-            + cls.certification_problems(text)
+            + cls.runtime_verification_problems(text)
         )
 
 
@@ -246,9 +246,9 @@ class HostCompatibilityStructureTests(unittest.TestCase):
                     ["unverified"], PROBE_STATUS_RE.findall(body), f"{key}: probe status not unverified"
                 )
 
-    def test_guide_does_not_claim_certification(self) -> None:
-        self.assertEqual([], HostCompatibilityChecks.certification_problems(self.text))
-        self.assertNotRegex(self.text, CERTIFIED_TRUE_RE)
+    def test_guide_does_not_claim_runtime_verification(self) -> None:
+        self.assertEqual([], HostCompatibilityChecks.runtime_verification_problems(self.text))
+        self.assertNotRegex(self.text, RUNTIME_VERIFIED_TRUE_RE)
 
 
 class HostCompatibilityDriftTests(unittest.TestCase):
@@ -258,13 +258,13 @@ class HostCompatibilityDriftTests(unittest.TestCase):
         record = json.loads(read(RECORD))
         blocks = host_blocks(read(DOC))
         self.assertEqual(4, len(record["adapters"]))
-        self.assertEqual(0, record["certification_summary"]["certified_adapters"])
+        self.assertEqual(0, record["verification_summary"]["runtime_verified_adapters"])
         for adapter in record["adapters"]:
             host = adapter["adapter_id"]
             self.assertEqual(
                 "not_run", adapter["version_probe"], f"{host}: record says version_probe != not_run"
             )
-            self.assertIs(False, adapter["certified"], f"{host}: record says certified is not False")
+            self.assertIs(False, adapter["runtime_verified"], f"{host}: record says runtime verified is not False")
             self.assertEqual(
                 "instructions_only",
                 adapter["enforcement_level"],
@@ -283,8 +283,8 @@ class HostCompatibilityDriftTests(unittest.TestCase):
         for host, adapter in HOSTS.items():
             self.assertIn(host, flatten(wiring), f"{host} missing from {HOSTS_GUIDE}")
             self.assertIn(adapter, wiring, f"{adapter} missing from {HOSTS_GUIDE}")
-        self.assertIn("certified_adapters: 0", flatten(wiring))
-        self.assertIn("not certified", flatten(wiring))
+        self.assertIn("runtime_verified_adapters: 0", flatten(wiring))
+        self.assertIn("not runtime verified", flatten(wiring))
 
     def test_docs_stay_outside_the_declared_bundle_scope(self) -> None:
         manifest = json.loads(read("release/skills-manifest.json"))

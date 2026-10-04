@@ -1,0 +1,22 @@
+{
+  "task_id": "K-605",
+  "owner_repository": "axiom-skills",
+  "branch": "feature/k-605-github-skills-release",
+  "status": "local_verified",
+  "spec_revision": "51fc8f92a56db0471205f368b6bfeefe434b165d",
+  "verification": [
+    "214 pytest tests passed",
+    "41-file manifest verified",
+    "8 canonical/plugin skills match bytes",
+    "Immutable Git blob pin and rollup verified",
+    "Both changed skills passed frontmatter validation",
+    "Workflow YAML parsed"
+  ],
+  "limitations": [
+    "Installed-host runtime remains unverified; this does not gate skills downloads.",
+    "GitHub CI configuration added; remote run result not yet observed.",
+    "No release tag or publication performed.",
+    "Independent shared-contract review and main integration remain pending."
+  ],
+  "delivery_state": "committed"
+}

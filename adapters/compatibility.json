@@ -1,11 +1,11 @@
 {
-  "record_version": 1,
-  "profile": "adapter-compatibility-v1",
+  "record_version": 2,
+  "profile": "adapter-compatibility-v2",
   "component": "axiom-skills",
   "component_version": "0.1.1",
   "spec_version": "2.0.0-draft.1",
-  "as_of": "2026-09-17",
-  "scope": "Certification record for the host adapters shipped by axiom-skills. It records the declared host identity, the exact adapter version, the protocol version, the per-feature status and the in-repository test evidence for each adapter, and it separates 'documented' and 'in-repository tested' from 'certified on an installed host'. The specification-side host matrix lives in axiom-specs/compatibility/host-matrix.json; this file is the owner-repository declaration and does not replace it.",
+  "as_of": "2026-10-04",
+  "scope": "Host/version/capability evidence for the portable skills bundle. Repository tests and installed-host runtime results are separate. No runtime verification milestone is a prerequisite for downloading instructions.",
   "documentation_pointer": "axiom-specs/compatibility/host-matrix.json",
   "enforcement_levels": [
     "instructions_only",
@@ -29,24 +29,24 @@
     "not_documented",
     "verified_on_installed_host"
   ],
-  "certification_rules": {
+  "verification_rules": {
     "requires_exact_installed_version": true,
     "requires_tested_os": true,
     "requires_protocol_version": true,
     "requires_runtime_test_artifact_hash": true,
-    "documented_table_is_not_certification": true,
-    "in_repository_unit_test_is_not_host_certification": true,
-    "mock_or_cross_compile_is_not_certification": true,
+    "documented_table_is_not_runtime_verification": true,
+    "in_repository_unit_test_is_not_host_runtime_verification": true,
+    "mock_or_cross_compile_is_not_runtime_verification": true,
     "enforcement_level_must_not_exceed_evidence": true,
     "undocumented_feature_must_not_claim_a_status": true
   },
-  "certification_summary": {
+  "verification_summary": {
     "declared_adapters": 4,
-    "certified_adapters": 0,
+    "runtime_verified_adapters": 0,
     "host_runtime_tests_run": 0,
-    "status": "documented_and_in_repository_tested_not_certified"
+    "status": "documented_and_in_repository_tested_runtime_unverified"
   },
-  "certification_blocker": "No licensed host runtime was available in this environment, so no adapter is certified. Recording an adapter as certified requires a probed exact installed version, a tested operating system, a host runtime test artifact and its SHA256, and an enforcement level that the evidence supports; a documented capability table or an in-repository unit test is never accepted as host certification.",
+  "runtime_limitation": "No installed-host runtime tests recorded. Skills remain usable as portable instructions; hook enforcement claims remain instructions_only until exercised on the selected host/version.",
   "adapters": [
     {
       "adapter_id": "codex",
@@ -100,7 +100,7 @@
       "repository_test_evidence": [
         {
           "path": "adapters/codex/instructions.md",
-          "sha256": "7712b7672a4b1d2fe11d02b3d39fcae04406838b5ecf43686a992368ba3bc8bb",
+          "sha256": "ae2f2ccd846d32b259e0f331848b38c3d9b4d7a8eecac55d3eaef35a2b48e767",
           "test_class": "CodexAdapterTests"
         },
         {
@@ -116,8 +116,8 @@
       "tested_os": [],
       "host_runtime_evidence": [],
       "enforcement_level": "instructions_only",
-      "certified": false,
-      "certification_blocker": "No installed Codex CLI version was probed on any operating system and no host runtime test artifact exists for this adapter, so it is recorded as documented and in-repository tested only. It is not certified and claims no hook gate.",
+      "runtime_verified": false,
+      "runtime_limitation": "Exact installed host/version has not been probed. This limits runtime hook claims, not portable skill use or release delivery.",
       "installer_behaviour": {
         "preserves_existing_host_configuration": true,
         "uninstall_removes_only_owned_files": true
@@ -174,7 +174,7 @@
       "repository_test_evidence": [
         {
           "path": "adapters/claude/instructions.md",
-          "sha256": "586f87fe319106903db39ff4d7459a9b5b3bee37359fb3ba9517ca958979245f",
+          "sha256": "9a451af192fe555f5a7c05c92ee0e4a84e7c6c3b4f0ee12b4c32dcd6c493b98b",
           "test_class": "ClaudeAdapterTests"
         },
         {
@@ -195,8 +195,8 @@
       "tested_os": [],
       "host_runtime_evidence": [],
       "enforcement_level": "instructions_only",
-      "certified": false,
-      "certification_blocker": "No installed Claude Code version was probed on any operating system and no host runtime test artifact exists for this adapter, so it is recorded as documented and in-repository tested only. It is not certified and claims no hook gate.",
+      "runtime_verified": false,
+      "runtime_limitation": "Exact installed host/version has not been probed. This limits runtime hook claims, not portable skill use or release delivery.",
       "installer_behaviour": {
         "preserves_existing_host_configuration": true,
         "uninstall_removes_only_owned_files": true
@@ -253,7 +253,7 @@
       "repository_test_evidence": [
         {
           "path": "adapters/gemini/instructions.md",
-          "sha256": "13bddc002f9bc0baf85e8e91b5d8ecb24af1bde10ceecd42e9d8b979899f473c",
+          "sha256": "17fa158de76f8be5ad05c6d48d0cbe323bb075fbefeeb3124522b58e2e0fcd97",
           "test_class": "GeminiAdapterTests"
         },
         {
@@ -269,8 +269,8 @@
       "tested_os": [],
       "host_runtime_evidence": [],
       "enforcement_level": "instructions_only",
-      "certified": false,
-      "certification_blocker": "No installed Gemini CLI version was probed on any operating system and no host runtime test artifact exists for this adapter, so it is recorded as documented and in-repository tested only. It is not certified and claims no hook gate.",
+      "runtime_verified": false,
+      "runtime_limitation": "Exact installed host/version has not been probed. This limits runtime hook claims, not portable skill use or release delivery.",
       "installer_behaviour": {
         "preserves_existing_host_configuration": true,
         "uninstall_removes_only_owned_files": true
@@ -335,7 +335,7 @@
       "repository_test_evidence": [
         {
           "path": "adapters/antigravity/instructions.md",
-          "sha256": "b9fb8fb748503acba0586bd8fd38817636dadd6b59937c650ec941c48c67d525",
+          "sha256": "51839a81266a134f6f5ce499ea24b1b05e0cecb04ff004d0876935e82c9901e3",
           "test_class": "AntigravityAdapterTests"
         },
         {
@@ -351,12 +351,18 @@
       "tested_os": [],
       "host_runtime_evidence": [],
       "enforcement_level": "instructions_only",
-      "certified": false,
-      "certification_blocker": "No installed AGY / Antigravity version was probed on any operating system and no host runtime test artifact exists for this adapter, so it is recorded as documented and in-repository tested only. It is not certified and claims no hook gate.",
+      "runtime_verified": false,
+      "runtime_limitation": "Exact installed host/version has not been probed. This limits runtime hook claims, not portable skill use or release delivery.",
       "installer_behaviour": {
         "preserves_existing_host_configuration": true,
         "uninstall_removes_only_owned_files": true
       }
     }
-  ]
+  ],
+  "release_policy": {
+    "verification": "github_actions",
+    "delivery": "github_releases",
+    "portable_skills": true,
+    "host_runtime_tests_required_for_download": false
+  }
 }

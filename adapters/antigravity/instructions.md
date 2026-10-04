@@ -18,7 +18,7 @@ profile's paths apply to the other.
   capabilities, the template match and any warning.
 - Record the pin in the host matrix (`compatibility/host-matrix.json`) with the exact version,
   operating system, surface (`ide` or `cli`), protocol version, adapter version and feature
-  status. A capability that was not tested is `not tested`, never `certified`, and a
+  status. A capability that was not tested is `not tested`, never `runtime verified`, and a
   capability confirmed on one surface is not a claim about the other.
 - Active rules and skill locations follow the documented installed version. When a configured
   rules path or skill location is not one the pinned version documents, the adapter stops rather

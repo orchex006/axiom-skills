@@ -1,0 +1,48 @@
+name: Skills CI
+on:
+  push:
+    branches: [main, 'feature/**']
+  pull_request:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      AXIOM_SPECS_ROOT: ${{ github.workspace }}/spec-source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Resolve immutable specification
+        id: spec
+        run: python -c "import json,os; r=json.load(open('spec.lock.json'))['spec_revision']; open(os.environ['GITHUB_OUTPUT'],'a').write('revision='+r+'\n')"
+      - uses: actions/checkout@v4
+        with:
+          repository: orchex006/axiom-specs
+          ref: ${{ steps.spec.outputs.revision }}
+          path: spec-source
+      - name: Verify specification pin
+        run: python spec-source/tools/spec-lock-check.py --lock spec.lock.json --spec-root spec-source --release --json
+      - name: Install test runner
+        run: python -m pip install pytest==9.1.1
+      - name: Test portable skills and adapters
+        run: python -m pytest tests -q -p no:cacheprovider
+      - name: Verify exact bundle and plugin bytes
+        run: |
+          python release/verify_manifest.py
+          python release/build_plugin_bundle.py
+      - name: Build and verify portable archive
+        run: |
+          VERSION=$(python -c "import json; print(json.load(open('release/skills-manifest.json'))['component_version'])")
+          python -m release.build_github_release --tag "v$VERSION" --out "${{ runner.temp }}/skills-assets"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: portable-skills-${{ github.sha }}
+          path: ${{ runner.temp }}/skills-assets/*
+          if-no-files-found: error

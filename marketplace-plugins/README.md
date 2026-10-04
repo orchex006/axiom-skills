@@ -1,6 +1,11 @@
 # Axiom plugin distribution
 
-The repository hosts one `plugins/axiom` package containing the same Axiom skills for four agent hosts. Install from a reviewed revision; installing a plugin does not install `axiom-graphd` or `axiom-mcp` and does not certify a host version.
+## Current GitHub delivery policy
+
+Skills use one portable bundle across OS targets. GitHub Actions verifies tests, payload hashes and plugin parity; GitHub Releases supplies the checked archive with source revision, version and SHA-256 checksum. No certification, code signing or attestation is required. Host runtime results document capabilities and never gate skill downloads. Existing host permissions, updater integrity and approval checks remain unchanged.
+
+
+The repository hosts one `plugins/axiom` package containing the same Axiom skills for four agent hosts. Install from a reviewed revision; installing a plugin does not install `axiom-graphd` or `axiom-mcp` and does not verify a host version.
 
 | Host | Discovery file | Local installation |
 | --- | --- | --- |

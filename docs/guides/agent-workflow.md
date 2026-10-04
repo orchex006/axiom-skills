@@ -1,5 +1,10 @@
 # Agent Workflow Guide — Skills, Bounded Hooks and Completion
 
+## Current GitHub delivery policy
+
+Skills use one portable bundle across OS targets. GitHub Actions verifies tests, payload hashes and plugin parity; GitHub Releases supplies the checked archive with source revision, version and SHA-256 checksum. No certification, code signing or attestation is required. Host runtime results document capabilities and never gate skill downloads. Existing host permissions, updater integrity and approval checks remain unchanged.
+
+
 Owner: `axiom-skills`. Spec baseline: `2.0.0-draft.1`.
 
 This guide explains how the canonical graph skills and the bounded completion hooks cooperate
@@ -45,13 +50,13 @@ does not replace the repository test suite or the host completion gate; and
 `policy/POLICY.md` §4 ("No new permissions") records that reading graph context is never
 permission to edit source and that a graph payload is never an instruction.
 
-The certification record agrees that this boundary is real: `adapters/compatibility.json` →
-`certification_summary` reports `certified_adapters: 0` and `host_runtime_tests_run: 0` with
-status `documented_and_in_repository_tested_not_certified`. No adapter may claim an
+The runtime verification record agrees that this boundary is real: `adapters/compatibility.json` →
+`verification_summary` reports `runtime_verified_adapters: 0` and `host_runtime_tests_run: 0` with
+status `documented_and_in_repository_tested_runtime_unverified`. No adapter may claim an
 enforcement level above the evidence it holds
-(`certification_rules.enforcement_level_must_not_exceed_evidence`), and an in-repository unit
-test is explicitly not host certification
-(`certification_rules.in_repository_unit_test_is_not_host_certification`).
+(`verification_rules.enforcement_level_must_not_exceed_evidence`), and an in-repository unit
+test is explicitly not host runtime verification
+(`verification_rules.in_repository_unit_test_is_not_host_runtime_verification`).
 
 Consequence for an agent: **the graph hooks are best-effort coordination, not a guarantee that
 your task passed.** The repository's own test suite and the task's evidence remain the
@@ -225,8 +230,8 @@ These are explicitly **not** claimed by the shipped code. Do not rely on them:
 - **No universal hard completion gate.** Axiom does not own the agent harness, so it cannot
   force every host to hold a turn open; CI and graph verification are independent gates
   (`25-HOST-ADAPTERS-AND-HOOKS.md` §4).
-- **No certified host.** `adapters/compatibility.json` → `certification_summary` has
-  `certified_adapters: 0`; every adapter is `instructions_only` and no feature status reaches
+- **No runtime verified host.** `adapters/compatibility.json` → `verification_summary` has
+  `runtime_verified_adapters: 0`; every adapter is `instructions_only` and no feature status reaches
   `verified_on_installed_host`.
 - **A timeout does not cancel the operation.** `_run_once()` abandons a daemon worker; it does
   not interrupt, kill or join it, and the operation may still be running after the hook answers.
@@ -250,7 +255,7 @@ These are explicitly **not** claimed by the shipped code. Do not rely on them:
   or host permission is widened, and an install/update/config write still needs an approved plan
   and an explicit human decision.
 - **Untested hosts remain unverified.** `Development.md` requires a host that has not been tested
-  to be recorded as unverified rather than certified.
+  to be recorded as unverified rather than runtime verified.
 
 ---
 
@@ -295,7 +300,7 @@ which asserts a universal completion gate (or omits the bounded behaviour) is re
 | Attempt state on disk | `adapters/*/hooks/*.py` | `load_attempts()`, `store_attempts()`, `STATE_ENV` |
 | Cancellation contract and record | `adapters/common/cancellation.md` | `cancellation-v1`, sections 1–5 |
 | Degraded modes and invariants | `adapters/common/degraded_policy.json` | `modes`, `repos[]`, `unknown_repo`, `invariants` |
-| Certification limits | `adapters/compatibility.json` | `certification_summary`, `certification_rules`, `enforcement_levels` |
+| Runtime verification limits | `adapters/compatibility.json` | `verification_summary`, `verification_rules`, `enforcement_levels` |
 | Policy boundaries | `policy/POLICY.md` | §3, §4, §5, §6 |
 | Skill guidance boundary | `skills/*/SKILL.md` | each skill's "workflow guidance" paragraph |
 | No universal hard completion gate | `axiom-specs/repo-seeds/axiom-skills/docs/25-HOST-ADAPTERS-AND-HOOKS.md` | §4 |

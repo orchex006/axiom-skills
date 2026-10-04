@@ -11,4 +11,4 @@ The agent MUST explicitly read `.axiom/agent/POLICY.md`; a link is not evidence.
 Managed block: `<!-- axiom-graph:begin -->` and `<!-- axiom-graph:end -->`.
 
 Enforcement levels: `instructions_only`, `hook_verified`, `ci_verified`. Host status is
-not certified and each field is version-specific for the installed version.
+not runtime verified and each field is version-specific for the installed version.

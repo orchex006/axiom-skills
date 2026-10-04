@@ -66,11 +66,11 @@ CLAIMS: tuple[tuple[str, str], ...] = (
     ("adapters/common/cancellation.md", 'completion_gate: "not_run"'),
     ("adapters/common/degraded_policy.json", "unknown_repo_is_not_fail_open"),
     ("adapters/common/degraded_policy.json", "fail_open_never_claims_a_completion_gate_ran"),
-    ("adapters/compatibility.json", "certified_adapters"),
+    ("adapters/compatibility.json", "runtime_verified_adapters"),
     ("adapters/compatibility.json", "enforcement_level_must_not_exceed_evidence"),
     (
         "adapters/compatibility.json",
-        "in_repository_unit_test_is_not_host_certification",
+        "in_repository_unit_test_is_not_host_runtime_verification",
     ),
     ("policy/POLICY.md", "No new permissions"),
     ("policy/POLICY.md", "Degraded operation"),
@@ -84,7 +84,7 @@ FORBIDDEN_CLAIMS = (
     r"always blocks every turn",
     r"terminates the worker thread",
     r"kills the worker thread",
-    r"every host is certified",
+    r"every host is runtime verified",
 )
 
 
@@ -137,7 +137,7 @@ class AgentWorkflowGuideTests(unittest.TestCase):
     def test_guide_names_the_ownership_boundary(self):
         flat = flatten(read(GUIDE))
         self.assertIn("no universal", flat)
-        self.assertIn("no certified host", flat)
+        self.assertIn("no runtime verified host", flat)
 
     def test_guide_documents_timeout_block_and_cancel(self):
         flat = flatten(read(GUIDE))
@@ -204,8 +204,8 @@ class AgentWorkflowGuideNegativeTests(unittest.TestCase):
         problems = guide_problems(broken, ROOT)
         self.assertTrue(any("retry_budget" in p for p in problems), problems)
 
-    def test_boundary_guide_for_an_uncertified_host_is_rejected(self):
-        broken = self.guide + "\n\nEvery host is certified after the in-repository unit tests.\n"
+    def test_boundary_guide_for_an_runtime_unverified_host_is_rejected(self):
+        broken = self.guide + "\n\nEvery host is runtime verified after the in-repository unit tests.\n"
         problems = guide_problems(broken, ROOT)
         self.assertTrue(problems, problems)
 

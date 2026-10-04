@@ -1,3 +1,7 @@
+## Unreleased — K-605
+
+- Replace active skills/adapter certification state with evidence; add portable GitHub CI and Release packaging.
+
 # 0.1.1 MacIntel test release
 
 Owner-authorized publication of current code; see release/v0.1.1-notes.md.

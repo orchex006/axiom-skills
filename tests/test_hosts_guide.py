@@ -3,7 +3,7 @@
 This slice ships `docs/guides/hosts.md`: the operator guide for wiring the Axiom graph
 workflow into Codex CLI, Claude Code, Gemini CLI and Antigravity (AGY). The guide is
 version-specific and must cite only real, retrieved host documentation; it must never present
-a fabricated URL as certification, and it must never claim a host is certified.
+a fabricated URL as runtime verification, and it must never claim a host is runtime verified.
 
 The tests come in four groups:
 
@@ -11,7 +11,7 @@ The tests come in four groups:
   so the same rules can be replayed against stored negative and boundary fixtures;
 * drift checks that re-read the shipped hook adapters and the compatibility record, so the
   guide cannot silently contradict the code it documents;
-* negative cases (a fabricated certification URL, a missing host) that must be rejected;
+* negative cases (a fabricated runtime verification URL, a missing host) that must be rejected;
 * boundary cases (every link honestly marked pending, and an allowlisted source URL whose
   final URL differs after a redirect) that must be accepted.
 """
@@ -103,14 +103,14 @@ SHARED_TOKENS: tuple[str, ...] = (
     "instructions_only",
     "hook_verified",
     "ci_verified",
-    "not certified",
-    "certified_adapters: 0",
+    "not runtime verified",
+    "runtime_verified_adapters: 0",
     "installed version",
     "version-specific",
 )
 
 URL_RE = re.compile(r"https?://[^\s|)>\]`\"']+")
-CERTIFIED_TRUE_RE = re.compile(r'"certified"\s*:\s*true|certified\s*:\s*true')
+RUNTIME_VERIFIED_TRUE_RE = re.compile(r'"runtime_verified"\s*:\s*true|runtime verified\s*:\s*true')
 
 
 def read(relative: str) -> str:
@@ -146,8 +146,8 @@ class HostsGuideChecks:
                 problems.append(
                     f"guide cites a URL that is not a retrieved host-documentation link: {url}"
                 )
-        if CERTIFIED_TRUE_RE.search(text):
-            problems.append("guide claims certified: true, which no host evidence supports")
+        if RUNTIME_VERIFIED_TRUE_RE.search(text):
+            problems.append("guide claims runtime_verified: true, which no host evidence supports")
         return problems
 
     @classmethod
@@ -188,10 +188,10 @@ class HostsGuideStructureTests(unittest.TestCase):
     def test_guide_never_presents_a_fabricated_url(self) -> None:
         self.assertEqual([], HostsGuideChecks.fabrication_problems(self.text))
 
-    def test_guide_states_the_host_is_not_certified(self) -> None:
-        self.assertIn("certified_adapters: 0", self.flat)
-        self.assertIn("not certified", self.flat)
-        self.assertNotRegex(self.text, CERTIFIED_TRUE_RE)
+    def test_guide_states_the_host_is_not_runtime_verified(self) -> None:
+        self.assertIn("runtime_verified_adapters: 0", self.flat)
+        self.assertIn("not runtime verified", self.flat)
+        self.assertNotRegex(self.text, RUNTIME_VERIFIED_TRUE_RE)
 
 
 class HostsGuideDriftTests(unittest.TestCase):
@@ -266,10 +266,10 @@ class HostsGuideDriftTests(unittest.TestCase):
 class HostsGuideNegativeTests(unittest.TestCase):
     """Every declared negative case must be rejected by the guide checks."""
 
-    def test_negative_fabricated_certification_url_is_rejected(self) -> None:
+    def test_negative_fabricated_runtime_verification_url_is_rejected(self) -> None:
         text = (FIXTURES / "negative-fabricated-link.md").read_text(encoding="utf-8")
         problems = HostsGuideChecks.fabrication_problems(text)
-        self.assertTrue(problems, "a fabricated certification URL was accepted")
+        self.assertTrue(problems, "a fabricated runtime verification URL was accepted")
         self.assertTrue(
             any("not a retrieved host-documentation link" in p for p in problems),
             f"expected a fabricated-URL problem, got {problems}",

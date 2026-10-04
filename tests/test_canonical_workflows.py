@@ -699,7 +699,7 @@ class AxiomCliInstallChecks:
     DECLARED_TARGET_MARKER = "Refuse to install on a target the contract does not declare"
     ENTRYPOINT_MARKER = "Probe and drive every verb through the distributed entrypoint only."
     WSL_MARKER = "Treat WSL2 as its own execution lane."
-    CERTIFY_MARKER = "Record certification state and never promote a tier."
+    VERIFY_MARKER = "Record execution evidence and never promote a tier."
     PLATFORMS = (
         "windows-x64",
         "macos-x64",
@@ -759,10 +759,10 @@ class AxiomCliInstallChecks:
             problems.append("skill does not keep WSL2 evidence separate")
         if "windows evidence" not in flat:
             problems.append("skill does not forbid recording WSL2 as Windows evidence")
-        if cls.CERTIFY_MARKER not in text:
-            problems.append("skill does not record certification state")
-        if "certified: true" not in text or "certified: false" not in text:
-            problems.append("skill does not distinguish the certification states")
+        if cls.VERIFY_MARKER not in text:
+            problems.append("skill does not record runtime verification state")
+        if "runtime_verified: true" not in text or "runtime_verified: false" not in text:
+            problems.append("skill does not distinguish the runtime verification states")
         if "unverified" not in flat:
             problems.append("skill does not use the unverified state")
         if "undeclared-pending" not in flat:
@@ -1064,11 +1064,11 @@ class AxiomCliInstallSkillTests(unittest.TestCase):
             "description: Promote every declared platform.\n"
             "---\n\n"
             "Present every deferred platform as finish-first and mark each\n"
-            "platform `certified: true` before any evidence exists.\n"
+            "platform `runtime_verified: true` before any evidence exists.\n"
         )
         problems = AxiomCliInstallChecks.check(fixture)
-        self.assertTrue(any("certification states" in p for p in problems), problems)
-        self.assertTrue(any("record certification state" in p for p in problems), problems)
+        self.assertTrue(any("runtime verification states" in p for p in problems), problems)
+        self.assertTrue(any("record runtime verification state" in p for p in problems), problems)
 
     def test_boundary_skill_that_drops_the_wsl_evidence_rule_is_rejected(self):
         text = read("skills/axiom-cli-install/SKILL.md")
@@ -1276,14 +1276,14 @@ class AxiomCliDistributionAgreementTests(unittest.TestCase):
         self.assertNotEqual(wsl["evidence_target"], by_id["windows-x64"]["evidence_target"])
         self.assertNotEqual(wsl["evidence_target"], by_id["linux-x64"]["evidence_target"])
 
-    def test_no_declared_target_is_certified_and_the_skill_says_so(self):
+    def test_no_declared_target_is_runtime_verified_and_the_skill_says_so(self):
         self.assertEqual(self.matrix["container"]["published_image_digest"], None)
         self.assertFalse(self.matrix["container"]["native_evidence"])
         for platform in self.matrix["delivery_platforms"]:
             self.assertFalse(platform["certified"], platform["platform_id"])
             self.assertEqual(platform["evidence"], [], platform["platform_id"])
-        self.assertIn("certified: true", self.skill)
-        self.assertIn("certified: false", self.skill)
+        self.assertIn("runtime_verified: true", self.skill)
+        self.assertIn("runtime_verified: false", self.skill)
 
     def test_negative_skill_that_installs_from_an_unresolved_authority_is_rejected(self):
         unheaded = self.skill.replace("### Resolving an authority revision", "### The authority")
@@ -2490,17 +2490,17 @@ class CancellationContractTests(unittest.TestCase):
         self.assertTrue(any("dirty state" in problem for problem in problems), problems)
 
 class CompatibilityChecks:
-    """A-021 - adapter payload version and certification record.
+    """A-021 - adapter payload version and runtime verification record.
 
     The record may carry three separate claims: a capability is *documented*, it is
-    *in-repository tested*, or it is *certified on an installed host*. Only the last one may set
-    `certified: true`, and it must bring a probed exact installed version, a tested operating
+    *in-repository tested*, or it is *runtime verified on an installed host*. Only the last one may set
+    `runtime_verified: true`, and it must bring a probed exact installed version, a tested operating
     system, a host runtime test artifact with its SHA256, and an enforcement level the evidence
     supports. A documented capability table or an in-repository unit test is never accepted as
-    host certification.
+    host runtime verification.
     """
 
-    PROFILE = "adapter-compatibility-v1"
+    PROFILE = "adapter-compatibility-v2"
     SURFACES = ("cli", "ide", "ide_and_cli")
     ENFORCEMENT_LEVELS = ("instructions_only", "hook_verified", "ci_verified")
     FEATURES = (
@@ -2532,23 +2532,23 @@ class CompatibilityChecks:
             problems.append("record does not declare an as_of date")
         if list(record.get("enforcement_levels", [])) != list(cls.ENFORCEMENT_LEVELS):
             problems.append("record does not declare the three enforcement levels")
-        rules = record.get("certification_rules")
+        rules = record.get("verification_rules")
         if not isinstance(rules, dict):
             rules = {}
-            problems.append("record does not declare its certification rules")
+            problems.append("record does not declare its runtime verification rules")
         for key in (
             "requires_exact_installed_version",
             "requires_tested_os",
             "requires_protocol_version",
             "requires_runtime_test_artifact_hash",
-            "documented_table_is_not_certification",
-            "in_repository_unit_test_is_not_host_certification",
-            "mock_or_cross_compile_is_not_certification",
+            "documented_table_is_not_runtime_verification",
+            "in_repository_unit_test_is_not_host_runtime_verification",
+            "mock_or_cross_compile_is_not_runtime_verification",
             "enforcement_level_must_not_exceed_evidence",
             "undocumented_feature_must_not_claim_a_status",
         ):
             if rules.get(key) is not True:
-                problems.append(f"certification rule is not asserted: {key}")
+                problems.append(f"runtime verification rule is not asserted: {key}")
 
         declared = {
             entry["path"]: entry.get("sha256")
@@ -2568,7 +2568,7 @@ class CompatibilityChecks:
                 continue
             adapter_id = str(entry.get("adapter_id", "?"))
             seen_ids.add(adapter_id)
-            for field in ("adapter_id", "host", "boundary_caveat", "certification_blocker"):
+            for field in ("adapter_id", "host", "boundary_caveat", "runtime_limitation"):
                 value = entry.get(field)
                 if not isinstance(value, str) or not value.strip():
                     problems.append(f"{adapter_id}: missing {field}")
@@ -2663,48 +2663,48 @@ class CompatibilityChecks:
                 problems.append(f"{adapter_id}: unknown enforcement level")
             if level in ("hook_verified", "ci_verified") and not runtime_ok:
                 problems.append(f"{adapter_id}: hook or CI enforcement requires host runtime evidence")
-            if entry.get("certified") is True:
+            if entry.get("runtime_verified") is True:
                 if not str(entry.get("installed_version") or "").strip():
-                    problems.append(f"{adapter_id}: certified adapter has no probed installed version")
+                    problems.append(f"{adapter_id}: runtime verified adapter has no probed installed version")
                 if not entry.get("tested_os"):
-                    problems.append(f"{adapter_id}: certified adapter has no tested OS")
+                    problems.append(f"{adapter_id}: runtime verified adapter has no tested OS")
                 if not runtime_ok:
-                    problems.append(f"{adapter_id}: certified adapter has no valid host runtime evidence")
+                    problems.append(f"{adapter_id}: runtime verified adapter has no valid host runtime evidence")
                 if level == "instructions_only":
-                    problems.append(f"{adapter_id}: certified adapter claims no hook gate")
+                    problems.append(f"{adapter_id}: runtime verified adapter claims no hook gate")
             behaviour = entry.get("installer_behaviour")
             if not isinstance(behaviour, dict) or behaviour.get("preserves_existing_host_configuration") is not True:
                 problems.append(f"{adapter_id}: installer behaviour does not preserve host configuration")
             elif behaviour.get("uninstall_removes_only_owned_files") is not True:
                 problems.append(f"{adapter_id}: uninstall does not remove only owned files")
-            if entry.get("certified") is False and not str(entry.get("certification_blocker", "")).strip():
-                problems.append(f"{adapter_id}: uncertified adapter records no blocker reason")
+            if entry.get("runtime_verified") is False and not str(entry.get("runtime_limitation", "")).strip():
+                problems.append(f"{adapter_id}: runtime-unverified adapter records no blocker reason")
 
         if sorted(seen_ids) != shipped:
             problems.append("adapter coverage does not match the shipped adapter directories")
-        summary = record.get("certification_summary")
+        summary = record.get("verification_summary")
         if not isinstance(summary, dict):
-            problems.append("record does not declare a certification summary")
+            problems.append("record does not declare a runtime verification summary")
         else:
-            certified = sum(1 for entry in entries if isinstance(entry, dict) and entry.get("certified") is True)
+            runtime_verified = sum(1 for entry in entries if isinstance(entry, dict) and entry.get("runtime_verified") is True)
             runtime_tests = sum(
                 len(entry.get("host_runtime_evidence") or [])
                 for entry in entries
                 if isinstance(entry, dict) and isinstance(entry.get("host_runtime_evidence"), list)
             )
             if summary.get("declared_adapters") != len(entries):
-                problems.append("certification summary miscounts the declared adapters")
-            if summary.get("certified_adapters") != certified:
-                problems.append("certification summary miscounts the certified adapters")
+                problems.append("runtime verification summary miscounts the declared adapters")
+            if summary.get("runtime_verified_adapters") != runtime_verified:
+                problems.append("runtime verification summary miscounts the runtime verified adapters")
             if summary.get("host_runtime_tests_run") != runtime_tests:
-                problems.append("certification summary miscounts the host runtime tests")
-            if certified and summary.get("status") == "documented_and_in_repository_tested_not_certified":
-                problems.append("certification summary status contradicts a certified adapter")
+                problems.append("runtime verification summary miscounts the host runtime tests")
+            if runtime_verified and summary.get("status") == "documented_and_in_repository_tested_runtime_unverified":
+                problems.append("runtime verification summary status contradicts a runtime verified adapter")
         return problems
 
 
 class AdapterCompatibilityTests(unittest.TestCase):
-    """A-021 - version and certify the shipped adapter payloads."""
+    """A-021 - version and verify the shipped adapter payloads."""
 
     DOC = "adapters/compatibility.json"
 
@@ -2717,20 +2717,20 @@ class AdapterCompatibilityTests(unittest.TestCase):
     def problems(self, record: dict) -> list[str]:
         return CompatibilityChecks.check(record, ROOT, self.manifest())
 
-    def test_record_satisfies_the_certification_contract(self):
+    def test_record_satisfies_the_runtime_verification_contract(self):
         self.assertEqual(self.problems(self.record()), [])
 
-    def test_no_adapter_is_certified_without_a_probed_host(self):
+    def test_no_adapter_is_runtime_verified_without_a_probed_host(self):
         record = self.record()
         self.assertTrue(record["adapters"])
         for entry in record["adapters"]:
-            self.assertFalse(entry["certified"], entry["adapter_id"])
+            self.assertFalse(entry["runtime_verified"], entry["adapter_id"])
             self.assertEqual(entry["version_probe"], "not_run", entry["adapter_id"])
             self.assertIsNone(entry["installed_version"], entry["adapter_id"])
             self.assertEqual(entry["tested_os"], [], entry["adapter_id"])
             self.assertEqual(entry["host_runtime_evidence"], [], entry["adapter_id"])
             self.assertEqual(entry["enforcement_level"], "instructions_only", entry["adapter_id"])
-            self.assertTrue(entry["certification_blocker"], entry["adapter_id"])
+            self.assertTrue(entry["runtime_limitation"], entry["adapter_id"])
 
     def test_every_shipped_adapter_is_recorded_with_pinned_test_evidence(self):
         declared = {entry["path"] for entry in self.manifest()["files"]}
@@ -2745,10 +2745,10 @@ class AdapterCompatibilityTests(unittest.TestCase):
                     item["sha256"], hashlib.sha256((ROOT / item["path"]).read_bytes()).hexdigest(), item["path"]
                 )
 
-    def test_negative_adapter_certified_without_runtime_evidence_is_rejected(self):
+    def test_negative_adapter_runtime_verified_without_runtime_evidence_is_rejected(self):
         record = self.record()
-        record["adapters"][0]["certified"] = True
-        record["certification_summary"]["certified_adapters"] = 1
+        record["adapters"][0]["runtime_verified"] = True
+        record["verification_summary"]["runtime_verified_adapters"] = 1
         problems = self.problems(record)
         self.assertTrue(any("no probed installed version" in problem for problem in problems), problems)
         self.assertTrue(any("no valid host runtime evidence" in problem for problem in problems), problems)

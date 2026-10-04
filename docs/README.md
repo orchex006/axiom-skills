@@ -2,7 +2,7 @@
 
 These guides are owned and released with `axiom-skills`. They describe intended
 behaviour and record what has actually been executed; they are not a
-certification for any host or target. Canonical contracts live in `axiom-specs`
+runtime verification for any host or target. Canonical contracts live in `axiom-specs`
 and are resolved through the pinned revision - do not fork them as an editable
 copy here.
 
@@ -11,9 +11,9 @@ copy here.
 - [Host compatibility and version probing](host-compatibility.md) - the probing
   and compatibility-discipline guide: what "version-probed" means, the
   independent compatibility dimensions, and why a documented capability table is
-  not certification.
+  not runtime verification.
 - [Host setup guides](guides/hosts.md) - the wiring guide, with the shared versus
-  host-specific split, the certification links each claim is grounded in, and a
+  host-specific split, the runtime verification links each claim is grounded in, and a
   per-host quick reference for Codex CLI, Claude Code, Gemini CLI and Antigravity
   (AGY).
 - [Agent workflow](guides/agent-workflow.md) - the bounded runtime contract: the
@@ -25,7 +25,7 @@ copy here.
 Documentation follows the shipped bytes; the authoritative records are:
 
 - `adapters/compatibility.json` - per-adapter, per-feature status, in-repository
-  test evidence and the certification blockers.
+  test evidence and the runtime limitations.
 - `policy/POLICY.md` - the managed-item policy, least privilege and degraded
   operation.
 - `release/skills-manifest.json` - the hash-pinned bundle declaration and its
