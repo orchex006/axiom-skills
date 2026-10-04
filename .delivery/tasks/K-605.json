@@ -1,0 +1,31 @@
+{
+  "task_id": "K-605",
+  "owner_repository": "axiom-skills",
+  "branch": "feature/k-605-github-skills-release",
+  "status": "done",
+  "spec_revision": "51fc8f92a56db0471205f368b6bfeefe434b165d",
+  "verification": [
+    "218 pytest tests passed",
+    "41-file manifest verified",
+    "8 canonical/plugin skills match bytes",
+    "Immutable Git blob pin and rollup verified",
+    "Both changed skills passed frontmatter validation",
+    "Workflow YAML parsed"
+  ],
+  "limitations": [
+    "Installed-host runtime remains unverified; this does not gate skills downloads.",
+    "Public GitHub CI passed. Private specification agreement cases report skipped there; exact private contract bytes were verified in the authorized local handoff.",
+    "No release tag or publication performed.",
+    "Independent shared-contract review and main integration remain pending."
+  ],
+  "delivery_state": "pushed",
+  "payload_commit": "78b753a3f74927439ee8c85b6909b49c9707fc57",
+  "verified_remote_payload_sha": "78b753a3f74927439ee8c85b6909b49c9707fc57",
+  "push_remote": "https://github.com/orchex006/axiom-skills.git",
+  "main_integration": "not_performed",
+  "github_ci": {
+    "conclusion": "success",
+    "source_revision": "78b753a3f74927439ee8c85b6909b49c9707fc57",
+    "url": "https://github.com/orchex006/axiom-skills/actions/runs/37181116538"
+  }
+}

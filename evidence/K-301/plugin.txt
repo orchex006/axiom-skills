@@ -1,0 +1,4 @@
+cwd=axiom-skills
+command=python release/build_plugin_bundle.py
+exit=0
+OK plugin bundle: 8 skills and policy match canonical bytes

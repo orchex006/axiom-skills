@@ -110,16 +110,14 @@ rewrites nothing. Before any write, every declared prerequisite is probed and re
 unsatisfied or unknown, and an unsatisfied or unknown required prerequisite refuses the mutation by
 name. An interrupted run is safe to repeat.
 
-## What cannot work today
+Never claim a completed installation without successful per-component verification.
+An unavailable or failed step **must never claim a completed installation**.
 
-The `axiom` operator verbs are not yet built on the current `axiom-graphd` revision: the operator
-verbs answer `NOT_READY` and exit 4. Until the owning repository builds them, a run of this skill
-must stop at the probe and report the install as **unbuilt** - not attempted, not installed and not
-verified - with that reason, and must never claim a completed installation, a verified component or
-a category it could not exercise. A verb whose production behaviour is not yet built must answer
-`NotReady` with a stated reason and must not return an empty success envelope. The `uninstall` verb
-is recorded `undeclared` by the contract and has no argv to run, so it is reported as unbuilt
-rather than executed.
+## Current availability
+
+Read the selected release and probe the installed entrypoint. Refuse only an actual missing command, unsupported feature, failed check or `NotReady` result; historical unavailable operator verbs are not a blanket statement about the current release. GitHub CI validates the selected assets and GitHub Releases distributes them with source/version/hash records. No certificate, signing or attestation is required for download. The existing updater integrity and approval protocol remains unchanged.
+
+This skill is portable agent guidance. Runtime/installer OS constraints apply to the selected artifact, not to a separate OS-specific skill.
 
 ## Prohibited behaviours
 

@@ -1,8 +1,8 @@
-# Certification links (boundary fixture: honestly pending)
+# Host documentation links (boundary fixture: honestly pending)
 
 Every row below is recorded as pending with a concrete reason instead of a fabricated success.
 The checker must accept this fixture: it presents only allowlisted documentation URLs, asserts
-no certification, and stays honest about what was and was not retrieved.
+no runtime verification, and stays honest about what was and was not retrieved.
 
 | Source | Host | Topic | URL | Retrieval | Cited token |
 | --- | --- | --- | --- | --- | --- |

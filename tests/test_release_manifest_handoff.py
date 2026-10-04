@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 from release.verify_manifest import verify
@@ -79,13 +80,23 @@ def test_path_escape_and_undeclared_payload_refuse(tmp_path: Path) -> None:
 
 
 def test_full_owner_payload_stages_for_distribution_converter(tmp_path: Path) -> None:
-    output = tmp_path / "owner-source"
-    command = ["python3", "release/build_engine_source.py", "--out", str(output)]
+    output = tmp_path / "owner source ไทย"
+    command = [sys.executable, "release/build_engine_source.py", "--out", str(output)]
     built = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
     assert built.returncode == 0, built.stdout + built.stderr
     assert (output / "skills-manifest.json").read_bytes() == MANIFEST.read_bytes()
     assert verify(output / "skills-manifest.json", output) == []
     assert len(json.loads(MANIFEST.read_text())["files"]) == 41
+    for row in json.loads(MANIFEST.read_text())["files"]:
+        assert (output / row["path"]).read_bytes() == (ROOT / row["path"]).read_bytes()
     refused = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
     assert refused.returncode == 2
     assert "candidate output already exists" in refused.stdout
+
+
+def test_windows_absolute_and_alternate_paths_refuse(tmp_path: Path) -> None:
+    for value in ("C:/outside.txt", "C:outside.txt", "//server/share/file", "skills\\outside.md", "skills/file:stream"):
+        path = changed_manifest(
+            tmp_path, lambda manifest: manifest["files"][0].update(path=value)
+        )
+        assert f"unsafe declared path: {value}" in verify(path, ROOT)

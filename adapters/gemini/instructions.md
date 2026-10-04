@@ -16,7 +16,7 @@ Before this adapter is written into a repository, probe the host and pin what wa
   capabilities, the template match and any warning.
 - Record the pin in the host matrix (`compatibility/host-matrix.json`) with the exact version,
   operating system, protocol version, adapter version and feature status. A capability that
-  was not tested is `not tested`, never `certified`.
+  was not tested is `not tested`, never `runtime verified`.
 - On an unknown or unsupported host version, fall back to a manual preview plus the CLI path.
   Never auto-write an assumed hook configuration or an assumed hook JSON schema.
 - Enforcement level MUST be declared explicitly: `instructions_only`, `hook_verified` or

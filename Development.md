@@ -1,5 +1,10 @@
 # Development — axiom-skills
 
+## Current GitHub delivery policy
+
+Skills use one portable bundle across OS targets. GitHub Actions verifies tests, payload hashes and plugin parity; GitHub Releases supplies the checked archive with source revision, version and SHA-256 checksum. No certification, code signing or attestation is required. Host runtime results document capabilities and never gate skill downloads. Existing host permissions, updater integrity and approval checks remain unchanged.
+
+
 ## Repository identity
 
 | Field | Value |
@@ -9,7 +14,7 @@
 | Owns | reusable agent skills (`skills/`), host adapters (`adapters/`), managed graph policy (`policy/`), release manifest (`release/`) |
 | Does not own | graph runtime (`axiom-graphd`), MCP surface (`axiom-mcp`), ecosystem contracts (`axiom-specs`) |
 
-Take only tasks whose `repo` is `axiom-skills`. Skill behavior, hook contracts, adapter compatibility และ policy ที่เป็น norm ของ ecosystem ต้อง coordinat ผ่าน `axiom-specs`; repository นี้ implement และ certify ไม่ใช่กำหนด contract เอง
+Take only tasks whose `repo` is `axiom-skills`. Skill behavior, hook contracts, adapter compatibility และ policy ที่เป็น norm ของ ecosystem ต้อง coordinat ผ่าน `axiom-specs`; repository นี้ implements and verifies the owner bundle; shared policy remains in axiom-specs
 
 ## Pinned governance
 
@@ -39,6 +44,12 @@ Skill เป็นส่วนของ operational workflow แต่การ�
 - เปลี่ยนไฟล์ skill แล้วต้องอัปเดต `release/skills-manifest.json` และ `Changelog.md` ให้ตรงกัน
 
 ## Required checks
+
+K-301 verifies the complete owner bundle on native Windows Python using the active
+interpreter. The owner pin includes ADR-0020 and its three required release lanes;
+WSL2 remains a deferred lane. Build and verify the staged owner payload with
+`release/build_engine_source.py` and `release/verify_manifest.py`. This artifact
+handoff does not establish installed Windows runtime or published release evidence.
 
 ```text
 python -m pytest tests -q
@@ -116,3 +127,7 @@ Merge เข้า `release/vX.Y.Z`, การ tag, การ publish skill bund
 ## Cross-repository
 
 เมื่อ task กระทบ `axiom-specs`, `axiom-graphd` หรือ `axiom-mcp` ต้องแยก child task ต่อ repository และแต่ละ repository ใช้ branch/verification/commit/push lifecycle ของตัวเอง
+
+## Public CI specification boundary
+
+The specification repository is private. Public skills CI validates the immutable owner pin metadata, bundle bytes, portable packaging and available owner tests without fetching private specification content. Exact contract-byte verification is recorded by the authorized specification handoff. Tests requiring a separate specification checkout report skipped on public CI; they are not relabelled passed. No cross-repository token or private source publication is required.

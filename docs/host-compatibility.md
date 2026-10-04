@@ -1,5 +1,10 @@
 # Host Compatibility and Version Probing
 
+## Current GitHub delivery policy
+
+Skills use one portable bundle across OS targets. GitHub Actions verifies tests, payload hashes and plugin parity; GitHub Releases supplies the checked archive with source revision, version and SHA-256 checksum. No certification, code signing or attestation is required. Host runtime results document capabilities and never gate skill downloads. Existing host permissions, updater integrity and approval checks remain unchanged.
+
+
 Owner: `axiom-skills` · Version: inherits the axiom-skills component version (`0.1.0-draft.1`) · Spec baseline: `2.0.0-draft.1`
 
 Documentation versioning: this document inherits the axiom-skills component version and has no
@@ -12,7 +17,7 @@ Claude Code, Gemini CLI, Antigravity (AGY) — and records what was actually obs
 
 Companion: `docs/guides/hosts.md` is the wiring guide; this document is the probing and
 compatibility-discipline guide. Both share one rule: a documented capability table is not
-certification, and an in-repository unit test is not host certification.
+runtime verification, and an in-repository unit test is not host runtime verification.
 
 ## 1. Unverified until version-probed
 
@@ -26,7 +31,7 @@ assumption, not a documentation read, and not a bare host CLI version string:
 - a host runtime test artifact exists and its SHA256 is recorded.
 
 Until all of that holds, the example stays `unverified`, and any capability that was not
-exercised on that version is `not tested` — never `certified`. None of the examples in §5 were
+exercised on that version is `not tested` — never `runtime verified`. None of the examples in §5 were
 promoted, because no licensed host runtime test was performed in this environment and
 `adapters/compatibility.json` records `version_probe: "not_run"` for every adapter. A Codex CLI
 or Claude Code executable being present on the build host is a locator hit, not a version
@@ -134,12 +139,12 @@ the compatibility record keeps `version_probe: "not_run"` for this adapter.
 `adapters/compatibility.json` is the owner-repository record; the specification-side matrix is
 `axiom-specs/compatibility/host-matrix.json`. This guide and the record must move together: when
 an adapter is probed, update the record and the matching `Probe status:` line in the same
-change. Until an adapter is probed, this guide reports `certified_adapters: 0` and marks every
-example `not certified`.
+change. Until an adapter is probed, this guide reports `runtime_verified_adapters: 0` and marks every
+example `not runtime verified`.
 
 ## 7. Limitations
 
-No licensed host runtime was probed in this environment, so no adapter is certified and every
+No installed host runtime was probed in this environment, so no adapter is runtime verified and every
 example above stays `unverified`. A host executable located on a build machine is not a version
 probe, and a documentation table is not a runtime test. Unperformed native tests remain
-unverified; this document claims no host certification.
+unverified; this document claims no host runtime verification.

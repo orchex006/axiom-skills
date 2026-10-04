@@ -1,0 +1,51 @@
+name: Skills GitHub Release
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing immutable tag matching the bundle version (vX.Y.Z)
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: skills-release-${{ inputs.tag }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    uses: ./.github/workflows/skills-ci.yml
+  publish:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify existing tag and source
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          python -c "import os,re; assert re.fullmatch(r'v[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?',os.environ['RELEASE_TAG']), 'invalid tag'"
+          test "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")" = "$GITHUB_SHA"
+          test "$RELEASE_TAG" = "v$(python -c "import json; print(json.load(open('release/skills-manifest.json'))['component_version'])")"
+      - uses: actions/download-artifact@v4
+        with:
+          name: portable-skills-${{ github.sha }}
+          path: release-assets
+      - name: Verify checked assets and publish new release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          cd release-assets
+          test "$(cat SOURCE-REVISION.txt)" = "$GITHUB_SHA"
+          sha256sum -c SHA256SUMS
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo 'Existing Release is immutable; refusing to replace assets' >&2
+            exit 1
+          fi
+          gh release create "$RELEASE_TAG" ./* --verify-tag --title "Axiom skills $RELEASE_TAG" --notes-file RELEASE-NOTES.md

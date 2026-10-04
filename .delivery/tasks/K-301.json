@@ -1,0 +1,10 @@
+{
+  "task_id": "K-301",
+  "owner": "axiom-skills",
+  "branch": "feature/k-301-windows-owner-bundle",
+  "source_revision": "26f862039a31800bda9809a0bda5e58f5d96ab98",
+  "bundle_sha256": "4ec6b778c17e180846d8074e7d637f8cd19dfdc01a909121cd6f1e51c3ee067c",
+  "verified": "local_artifact",
+  "certified": false,
+  "handoff": "evidence/K-301/owner-handoff.json"
+}

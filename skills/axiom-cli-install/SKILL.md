@@ -56,8 +56,8 @@ authority.
 2. when the pin does not contain an authority this skill names, record `authority-absent-at-pin`
    with that exact command and its exit code, then resolve the authority at the newest immutable
    revision of `axiom-specs` that does contain it and record that revision sha in the report. The
-   distribution contract and the `axiom-cli` distribution guide are both newer than the pin
-   currently recorded in `spec.lock.json`, so this branch is the expected one today;
+   distribution contract and the `axiom-cli` distribution guide must both be checked at the
+   recorded pin; do not assume either authority is absent from that revision;
 3. when an authority cannot be resolved at any immutable revision, stop: report the path as
    unresolved and refuse the install. Do not work from memory, from a directory listing or from an
    earlier session's copy, and do not advance `spec.lock.json` yourself - a pin that is older than
@@ -69,7 +69,9 @@ authority.
    distribution contract section 7 dependency table record, per prerequisite, the component that
    needs it, the manifest or document that proves its version, whether it is mandatory and whether
    it needs elevation. From section 4 release tiers record which platforms are finish-first and
-   which are deferred. All four finish-first execution lanes are release-blocking. A prerequisite whose owning repository has not pinned a
+   which are deferred. Apply the accepted scope amendment ADR-0020: Windows x64, container
+   Linux x64 and Mac Intel are the three required lanes; WSL2 is deferred and nonblocking.
+   A prerequisite whose owning repository has not pinned a
    version is recorded as `undeclared-pending-<task>`; the distribution must not guess a version,
    and no release tier may be relaxed, removed or re-labelled.
 
@@ -110,9 +112,9 @@ authority.
    component updates are one transaction with one approval digest. `needs_restart` is reported per
    component, and an unapplied update is never reported as applied.
 
-7. **Record certification state and never promote a tier.** A platform or tier is `certified: true`
+7. **Record execution evidence and never promote a tier.** A platform or tier is `runtime_verified: true`
    only when every evidence category its native target requires has a recorded artifact with a
-   digest; absent evidence means `certified: false` and empty evidence. A deferred
+   digest; absent evidence means `runtime_verified: false` and empty evidence. A deferred
    platform must never be presented as finish-first. Record the target you actually
    executed and report every target you could not exercise as **unverified**, with its exact
    reproducible command and its `skipped` or `not_run` state, never as passing.
@@ -125,7 +127,7 @@ authority.
 9. **Report honestly and end at the Human result.** The run ends at the same recorded verification
    result the Human path produces (`axiom version --all --json` and `axiom doctor --all --json`
    over the same installed revisions). Report per target: executed or unverified, the artifact
-   versions with their sha256, the certification state, and every leg this run could not exercise.
+   versions with their sha256, the execution evidence, and every leg this run could not exercise.
 
 ## Case outcomes
 
@@ -136,7 +138,7 @@ and a case the host cannot perform is `not_run` with its exact command and its e
 | Case | Shape | Required recorded outcome |
 |---|---|---|
 | positive | the host is a declared delivery target and the entrypoint is present: `windows-x64` on Windows, `macos-x64` on macOS, `container-linux-x64` in the published container | drive `install`, `update`, `doctor`, `version` and `uninstall` through the entrypoint and record the per-verb result; a verb that answers `NotReady` with exit code 4 is recorded as `unverified` for that leg, never as `passed`, and the run does not become a completed installation |
-| declared but not yet verified | a target the contract declares that this host is not: `linux-x64`, `macos-arm64` or `wsl2-linux-x64` | `unverified` with its declared tier (`deferred` or `finish-first`), its `certified: false` state and the reason no matching execution record exists; WSL2 requires separate WSL2 evidence |
+| declared but not yet verified | a target the contract declares that this host is not: `linux-x64`, `macos-arm64` or `wsl2-linux-x64` | `unverified` with its declared tier (`deferred` or `finish-first`), its `runtime_verified: false` state and the reason no matching execution record exists; WSL2 requires separate WSL2 evidence |
 | undeclared platform | an os/arch pair no delivery platform declares, for example `windows-arm64` or `linux-arm64` | `refused` by name before any write; record the observed os and arch and the ids the contract does declare |
 | missing mandatory dependency | a prerequisite the contract marks mandatory is absent or unknown on this host: the Rust toolchain, the Python interpreter or the SQLite driver | `refused` by name before any write, naming the prerequisite and its `mandatory: yes` row; a non-mandatory row (`nodejs`, `wsl`, `docker`, `bash`) never refuses an install |
 
@@ -148,18 +150,13 @@ Node.js, a compiler or SDK for a language the user is only consuming, or network
 feature the operator selected as offline. This skill therefore does not require Bash, Docker,
 Node.js or elevation on a supported host.
 
-## What cannot work today
+An actual `NOT_READY` result uses exit 4 and remains unverified for that feature.
 
-The distribution is a normative contract, not a published artifact: the contract's non-goals state
-that it does not certify any platform, publish any artifact, define a signing service, create a
-release or authorize a push. Where the owner repository has not yet built a verb, the entrypoint
-answers `NotReady` with a stated reason and must not return an empty success envelope; at the
-`axiom-graphd` revision this skill was verified against (`3599dfb`) the operator verbs answer
-`NOT_READY` and exit 4 rather than reporting a success. Until the distributed
-release, its per-user installers, its container image and its `channels/stable.json` manifest exist
-and a native execution record exists, no target is `certified: true`, this skill cannot complete an
-install, and every install, update and uninstall leg must be reported **unverified** with the
-concrete reason rather than reported as working.
+## Current release and runtime evidence
+
+Use the approved GitHub Release assets and exact source/version/hash records. GitHub Actions verifies the selected bundle; a Release must contain the matching checked assets. No certificate, signing or attestation is required for download. Preserve implemented updater integrity and approval checks.
+
+This skill is portable across agent hosts and operating systems. Only the invoked runtime/installer chooses an OS/architecture artifact. Report missing assets, unavailable entrypoints and actual `NotReady` results by feature; do not infer a blanket failure from historical candidate evidence.
 
 ## Prohibited behaviours
 
@@ -180,7 +177,7 @@ concrete reason rather than reported as working.
 
 A distribution report containing: the contract and platform-matrix revision read, the dependency
 rows with their mandatory and elevation state, the target id actually executed with the OS and
-architecture, the tier and certification state, the per-component artifacts with versions and
+architecture, the tier and runtime verification state, the per-component artifacts with versions and
 sha256, the channel manifest used, the per-target verification result, and every unverified or
 unbuilt leg with the concrete reason and an actionable next step or an explicit blocked report.
 It also records the resolved authority revision and the pin state (`present` or

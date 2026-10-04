@@ -1,3 +1,7 @@
+## Unreleased — K-605
+
+- Replace active skills/adapter certification state with evidence; add portable GitHub CI and Release packaging.
+
 # 0.1.1 MacIntel test release
 
 Owner-authorized publication of current code; see release/v0.1.1-notes.md.
@@ -8,6 +12,14 @@ Canonical changelog for `axiom-skills`. Component versioning is independent of t
 version; entries below are unreleased working-tree changes, not a published release.
 
 ## Unreleased
+
+### K-301 Windows owner bundle candidate
+
+Use the active Python interpreter for owner payload staging on Windows. Align
+distribution guidance and its contract checks with ADR-0020, pin the immutable
+three-lane specification, and regenerate the portable plugin and manifest hashes.
+Record actual Windows bundle verification and failure-boundary evidence for the
+downstream K-305 consumer; installed runtime and release certification remain separate.
 
 ### K-401 container lane owner bundle candidate
 
