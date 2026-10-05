@@ -1,3 +1,7 @@
+## 0.1.2 — K-612
+
+- Publish the current portable owner bundle and aligned host plugin metadata through checked GitHub delivery; no OS-specific skill fork or certification prerequisite.
+
 ## Unreleased — K-608
 
 - Include the three canonical bootstrap content files in the hash-verified portable owner payload for graphd public bootstrap composition.

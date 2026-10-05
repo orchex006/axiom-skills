@@ -1,14 +1,14 @@
 {
   "spec_version": "2.0.0-draft.1",
   "spec_repository": "axiom-specs",
-  "spec_revision": "51fc8f92a56db0471205f368b6bfeefe434b165d",
-  "spec_content_sha256": "341aeb2b8b64de2182a1d5cc4f59dcb2f1d3aba591d3358e47ea5e72970dea2c",
+  "spec_revision": "2564d53d6a39f7a9b4b1c99528387807eee7b73d",
+  "spec_content_sha256": "98d1b75d2525217036f088bcc9ccc38347c2799e84cdda9e002e8731ed82609f",
   "owner_repository": "axiom-skills",
   "workspace_layout": 2,
   "graph_payload_schema": 1,
-  "verification": "K-605: exact immutable Git blobs and canonical digest rollup verified; ADR-0029 portable skills GitHub delivery. Publication and installed-host tests are separate observations.",
+  "verification": "K-612: exact immutable Git blobs/rollup verified for owner-authorized 0.1.2 publication.",
   "contract_digests": {
-    "Development.md": "8241bdf77c1bfeaf8205ece2bcee3d6a4ae858598c9e5eea42a0c226ca0482bd",
+    "Development.md": "e82c268677b6574928819bfc5753eb881fb175e9adf6e9652af94ee44f5264bb",
     "adrs/ADR-0019.md": "aae92d700b3019a535ab0a57cf91bf4e01771f02890ebb043ff8aaecd3e44fbd",
     "adrs/ADR-0020.md": "8a53b170dcc8e2a6635b35e77dec252037941fd5690de6e41e802344840c8d72",
     "compatibility/platform-matrix.json": "c7c4113af96fecd9125495e0b5be68eb6f0aac0efaa6f5f1958126d45d943659",
@@ -23,11 +23,13 @@
     "contracts/version-dimensions.json": "7717d17d48a8a6dc697c5e78c9f699744bef2c32edf03d7a4b5afeea40b12345",
     "specs/v2/K-release-readiness.md": "a5c94280d0f6be8403c6bd000d6534e16b9f86d4f2e3d8dd78128e8c2d517d44",
     "tasks/K/scope-map.json": "5690a2f5b8b5d95f68120ab97e165826e3c734758e08c9d0e8efeb4f7c071fc7",
-    "tasks/tasks.json": "3cf62cd6d01f18ffff8ffd03da8ad1834e3e5fd208e322bd496dc8b0ebdc47fa",
+    "tasks/tasks.json": "61f2b43badf186a90cb07f164c083e849ba7b4da1e40ce40cb276dd53392840e",
     "tools/specctl.py": "2353a4ca139b5d52f0904fb98a2cacfb14ffb08acee9a828d4d299e812db099f",
     "adrs/ADR-0028.md": "20a840c1fdb3379c500d6053543a5ce45492fd6a221545b9f8cd1b0d8b4de34b",
     "adrs/ADR-0029.md": "111ada2552811b6c9ff13c9524147185bba5e565a454b2558a454eb4f499fdee",
     "compatibility/host-matrix.json": "7ecd86a6f51867f36190ff216405ae398ea5389f3b0820396c4172acbbd810c2",
-    "specs/v2/A-axiom-skills.md": "58240ebacefcca983713362be6fd4108900c34fa503bea65e4d7a01bf3a008af"
+    "specs/v2/A-axiom-skills.md": "58240ebacefcca983713362be6fd4108900c34fa503bea65e4d7a01bf3a008af",
+    "adrs/ADR-0032.md": "edf0a5fe1dcbf3fd48804b5b2e79d6e217218a40765950d47799a16a587ae518",
+    "release/v0.1.2-plan.json": "7a72701a80917cfb5457f6687c53e718d96d440bd869cbfe9094c54a35427d2d"
   }
 }
