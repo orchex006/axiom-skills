@@ -1,0 +1,46 @@
+{
+  "repository": "orchex006/axiom-skills",
+  "version": "0.1.2",
+  "tag": "v0.1.2",
+  "published": true,
+  "release_url": "https://github.com/orchex006/axiom-skills/releases/tag/v0.1.2",
+  "published_at": "2026-10-05T07:13:43Z",
+  "source_revision": "c887e7fa70a2a13067e7df621867b3afcc31b565",
+  "github_actions": "https://github.com/orchex006/axiom-skills/actions/runs/37276519104",
+  "assets": [
+    {
+      "name": "RELEASE-NOTES.md",
+      "sha256": "1c2ccade76fb7f0c0ca10ddfaa92bd845977fe5f49522e5e99befc7423818163",
+      "bytes": 322
+    },
+    {
+      "name": "RELEASE-SOURCES.json",
+      "sha256": "d4428f6888231bbccbfef881bcd3c81a5b373828688fef4b4ac4dfc00dca0f0e",
+      "bytes": 391
+    },
+    {
+      "name": "SOURCE-REVISION.txt",
+      "sha256": "d1d6afd5722182d04eff0c5794c668fca1b618ce1c7eddda8dcef58fd631c9a0",
+      "bytes": 41
+    },
+    {
+      "name": "axiom-skills-0.1.2.zip",
+      "sha256": "f1816f86d030eb15e3604a4ee10aca324790b909190dff190999d7d96e87da08",
+      "bytes": 98562
+    }
+  ],
+  "certification_required": false,
+  "verified_environments": [
+    "windows-x64",
+    "macos-x64",
+    "linux-x64",
+    "wsl2-linux-x64"
+  ],
+  "limitations": [
+    "Mac ARM excluded.",
+    "Licensed AI host applications are not claimed exercised.",
+    "Mac Intel native package/entrypoint/install-plan and installed MCP/core CI passed; full desktop service registration/apply is not inferred from this runner.",
+    "Use the extracted Windows/Linux CLI for management; optional user-PATH entrypoint installers are explicit actions. Embedded local channels are offline verified descriptions; signed automatic update feeds remain separate.",
+    "Default static-analysis profile remains bounded; a single-line C# namespace-plus-class test fixture was not resolved as a class. Multiline real-source watcher/query passed."
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "task_id": "K-612",
+  "status": "done",
+  "branch": "feature/k-612-release-012",
+  "delivery_state": "integrated",
+  "published": true,
+  "tag": "v0.1.2",
+  "release_source_revision": "c887e7fa70a2a13067e7df621867b3afcc31b565",
+  "github_release": "https://github.com/orchex006/axiom-skills/releases/tag/v0.1.2",
+  "publication_ci": "https://github.com/orchex006/axiom-skills/actions/runs/37276519104",
+  "certification_required": false
+}
