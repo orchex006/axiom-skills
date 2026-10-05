@@ -1,11 +1,11 @@
 {
   "manifest_version": 1,
   "component": "axiom-skills",
-  "component_version": "0.1.1",
+  "component_version": "0.1.2",
   "channel": "experimental",
   "released": false,
   "spec_version": "2.0.0-draft.1",
-  "spec_revision": "51fc8f92a56db0471205f368b6bfeefe434b165d",
+  "spec_revision": "2564d53d6a39f7a9b4b1c99528387807eee7b73d",
   "install_policy": {
     "declared_scope": [
       "policy",
@@ -79,7 +79,7 @@
     {
       "path": "skills/graph-install/SKILL.md",
       "role": "skill",
-      "sha256": "bfb0cf82ccae19b44d58ec416991bb8d048d9903d1870c9f91af9fb82f73efa2",
+      "sha256": "59bc4652e4dccdea3febf0a9ecde46c0f49b59d6fbc8e9a29a0104350ef203b5",
       "bytes": 9849
     },
     {
@@ -191,20 +191,20 @@
     {
       "path": "adapters/compatibility.json",
       "role": "host-adapter-compatibility",
-      "sha256": "ca88dea71e3b46a3b824087032d966f098f15a9b5af4be15f411b8268d7660e6",
+      "sha256": "cc61f3bf9d9e78c21bd2f880b6b02a4a0555a06ad4d78909ef919a728bb0b009",
       "bytes": 12778
     },
     {
       "path": "plugins/axiom/.claude-plugin/plugin.json",
       "role": "plugin-package",
-      "sha256": "c1c784640f42aafc756a425eb8bd35daa70eb346780246c1c6734af2209a47b9",
+      "sha256": "f6352984e360230a6fd1b3300e44c4b29c8832380eb51232de3aa558b7fd25ae",
       "bytes": 165
     },
     {
       "path": "plugins/axiom/.codex-plugin/plugin.json",
       "role": "plugin-package",
-      "sha256": "f7155bf2cc59854ffb9706b048c861a5fa8084db765ac89b754e8e857f0495e0",
-      "bytes": 781
+      "sha256": "26599890f695d17f344fdf59601981740c1e56590c2087d54e0f58bae0af423d",
+      "bytes": 793
     },
     {
       "path": "plugins/axiom/GEMINI.md",
@@ -221,7 +221,7 @@
     {
       "path": "plugins/axiom/gemini-extension.json",
       "role": "plugin-package",
-      "sha256": "9715d2fc67bd7e3c8e9a545b6b9c6f48ba403c88349d9ee62b2dcd980bc63056",
+      "sha256": "bc3a122b51a5acf22f664ca13256fc3eb2d6f440d338d2002b050df06c2d016d",
       "bytes": 156
     },
     {
@@ -269,7 +269,7 @@
     {
       "path": "plugins/axiom/skills/graph-install/SKILL.md",
       "role": "plugin-package",
-      "sha256": "bfb0cf82ccae19b44d58ec416991bb8d048d9903d1870c9f91af9fb82f73efa2",
+      "sha256": "59bc4652e4dccdea3febf0a9ecde46c0f49b59d6fbc8e9a29a0104350ef203b5",
       "bytes": 9849
     },
     {
