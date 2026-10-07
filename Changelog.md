@@ -1,3 +1,7 @@
+## 0.1.3 — one-line install release
+
+- Version 0.1.3; carries L-008 (axiom-cli-install leads with the one-line install).
+
 ## Unreleased — L-008 one-line install skill
 
 - `axiom-cli-install` now leads with the ADR-0033 one-liners (Windows `irm …/install.ps1 | iex`, POSIX `curl -fsSL …/install.sh | sh`) and the pinned `releases/download/vX.Y.Z/` form, requires asking the human before the single confirmation (never self-approving, never inventing a digest), diagnoses through `axiom-cli doctor`, points legacy layouts to L-006 adoption (`--adopt`) and keeps `--dry-run` / `--apply --approve-digest` as the automation fallback only. Plugin copy and `release/skills-manifest.json` updated; new `OneLineInstallSkillTests` (R06, R16, R22).
