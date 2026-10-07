@@ -1,6 +1,6 @@
 ---
 name: axiom-cli-install
-description: Install, update, doctor and uninstall through the distributed axiom-cli entrypoint only, reading the distribution contract dependency table and release tiers before installing anything, refusing an undeclared target, and recording every target it could not exercise as unverified.
+description: Install with the ADR-0033 one-line command (or axiom-cli install --yes), then update, doctor and uninstall through the distributed axiom-cli entrypoint only, reading the distribution contract dependency table and release tiers before installing anything, refusing an undeclared target, and recording every target it could not exercise as unverified.
 ---
 
 # Distributed CLI provisioning
@@ -15,6 +15,42 @@ and tier-aware part of it and ends at the same recorded verification result the 
 produces. This skill is workflow guidance. It grants no permissions, it does not widen the host
 sandbox or approval behaviour, and it does not replace the distribution contract or the host's own
 consent.
+
+## Primary path: the one-line install (ADR-0033)
+
+Since ADR-0033 (accepted 2026-10-06) the supported first install is one command, hosted as a
+GitHub Release asset of `orchex006/axiom-cli`:
+
+- Windows x64 (PowerShell 5.1+, not Administrator):
+  `powershell -ExecutionPolicy Bypass -c "irm https://github.com/orchex006/axiom-cli/releases/latest/download/install.ps1 | iex"`
+- macOS, Linux x64 and WSL2 (not root):
+  `curl -fsSL https://github.com/orchex006/axiom-cli/releases/latest/download/install.sh | sh`
+- A pinned version: `https://github.com/orchex006/axiom-cli/releases/download/vX.Y.Z/install.ps1`
+  (or `install.sh`).
+
+The script verifies the release archive's SHA-256 and hands off to `axiom-cli install`, which prints
+the plan (version, components, install root, PATH change, size) and asks `Proceed? [Y/n]` once.
+
+**The confirmation belongs to the human.** Show the human the plan and ask them before the
+confirming step. Never answer the prompt, pass `--yes` / `-Yes` or set `AXIOM_INSTALL_YES=1` on your
+own initiative, and never invent or copy an approval digest the human did not approve. When the
+human explicitly asks for an unattended install, `--yes` (or `axiom-cli install --yes` from an
+extracted release) is the documented non-interactive form; `--no-modify-path` skips the PATH
+change. After the install, in a new terminal: `axiom-cli version`, `axiom-cli doctor` (diagnosis
+starts here), `axiom-cli update` (checks the recorded channel, shows the plan, asks once) and
+`axiom-cli uninstall` (keeps user data).
+
+**Legacy installations.** A 0.1.0/0.1.2 CLI store, a 0.1.2 bootstrap root such as
+`%USERPROFILE%xiom`, a stale `axiom-cli` earlier on PATH or leftover `AXIOM_*` variables are
+reported by `axiom-cli doctor`. Point the human to the L-006 adoption shown in the install plan
+(in place for a CLI store, `axiom-cli install --adopt <path>` for a bootstrap root, otherwise side
+by side); never delete a legacy tree yourself.
+
+**Automation fallback only.** `axiom-cli install --dry-run` followed by
+`axiom-cli install --apply --approve-digest <sha256>` remains for agents and CI that must bind an
+approval to an exact plan digest the human reviewed. The 0.1.2 two-script procedure
+(separate bootstrap and CLI installer scripts with hand-copied digests) is historical and is not an
+install path.
 
 ## Authority and dependencies
 
@@ -97,13 +133,17 @@ authority.
    dependency is reported and refuses the install by name, and the distribution must not guess a
    version for an `undeclared-pending` row.
 
-5. **Install the target's pinned component set, then verify.** `axiom-cli install` installs or
-   repairs this platform's pinned component set. An install result envelope must name every
+5. **Install the target's pinned component set, then verify.** Use the one-line command above (or
+   `axiom-cli install` from an extracted release); `axiom-cli install` installs or
+   repairs this platform's pinned component set into one per-user root with one `bin` and one
+   `installed.json`. An install result envelope must name every
    installed artifact, its version and its sha256. Verify with `axiom-cli doctor` and
    `axiom-cli version` and record the result per component and per target; a successful download is
    not a completed installation.
 
-6. **Update through the recorded channel only.** `update check`, `plan`, `apply` and `rollback`
+6. **Update through the recorded channel only.** A bare `axiom-cli update` reads the channel source
+   recorded in `installed.json` (the release's `channel.json`), shows the plan and asks once; ask the
+   human before confirming. The J-007 subcommands `update check`, `plan`, `apply` and `rollback`
    resolve versions only from the recorded manifest (`channels/stable.json`); a branch tip, a tag
    alias, a network `latest`, `HEAD` or `*` is refused. A sha256 is verified for every artifact
    before it is used, and a mismatch aborts the transaction. An apply is an atomic swap that keeps

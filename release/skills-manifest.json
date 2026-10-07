@@ -85,8 +85,8 @@
     {
       "path": "skills/axiom-cli-install/SKILL.md",
       "role": "skill",
-      "sha256": "5f1f90bc0554a3bfea30cba5896dd6865083daa15aba097bc2073fde00cf2da3",
-      "bytes": 14062
+      "sha256": "380b2b71f02c48f54dad84bd77dead832849d803dc77ba4f344458205b471212",
+      "bytes": 16809
     },
     {
       "path": "adapters/codex/instructions.md",
@@ -239,8 +239,8 @@
     {
       "path": "plugins/axiom/skills/axiom-cli-install/SKILL.md",
       "role": "plugin-package",
-      "sha256": "5f1f90bc0554a3bfea30cba5896dd6865083daa15aba097bc2073fde00cf2da3",
-      "bytes": 14062
+      "sha256": "380b2b71f02c48f54dad84bd77dead832849d803dc77ba4f344458205b471212",
+      "bytes": 16809
     },
     {
       "path": "plugins/axiom/skills/graph-checkpoint/SKILL.md",

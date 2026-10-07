@@ -3131,3 +3131,43 @@ class BootstrapManifestTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OneLineInstallSkillTests(unittest.TestCase):
+    """L-008: the install skill leads with the ADR-0033 one-line flow."""
+
+    PS = 'irm https://github.com/orchex006/axiom-cli/releases/latest/download/install.ps1 | iex'
+    SH = 'curl -fsSL https://github.com/orchex006/axiom-cli/releases/latest/download/install.sh | sh'
+    PINNED = "releases/download/vX.Y.Z/install.ps1"
+    HUMAN = "ask them before the confirming step"
+
+    @classmethod
+    def problems(cls, text):
+        text = " ".join(text.split())
+        found = []
+        for marker, why in [(cls.PS, "Windows one-liner"), (cls.SH, "POSIX one-liner"), (cls.PINNED, "pinned form"),
+                            (cls.HUMAN, "human confirmation rule"), ("--adopt", "L-006 adoption pointer"),
+                            ("Automation fallback only", "digest steps limited to automation")]:
+            if marker not in text:
+                found.append("missing " + why)
+        for stale in ("bootstrap_windows.ps1", "Install-AxiomCli.ps1"):
+            if stale in text:
+                found.append("stale primary path " + stale)
+        if text.find(cls.PS) > text.find("--approve-digest") >= 0:
+            found.append("digest procedure precedes the one-liner")
+        return found
+
+    def test_skill_and_plugin_copy_lead_with_the_one_liner(self):
+        for path in ("skills/axiom-cli-install/SKILL.md", "plugins/axiom/skills/axiom-cli-install/SKILL.md"):
+            self.assertEqual(self.problems(read(path)), [], path)
+
+    def test_negative_two_script_procedure_is_rejected(self):
+        text = read("skills/axiom-cli-install/SKILL.md").replace(
+            self.PS, "powershell -File bootstrap_windows.ps1 -Root <root> -DryRun")
+        problems = self.problems(text)
+        self.assertIn("missing Windows one-liner", problems)
+        self.assertIn("stale primary path bootstrap_windows.ps1", problems)
+
+    def test_negative_self_approving_skill_is_rejected(self):
+        text = " ".join(read("skills/axiom-cli-install/SKILL.md").split()).replace(self.HUMAN, "pass --yes")
+        self.assertIn("missing human confirmation rule", self.problems(text))
