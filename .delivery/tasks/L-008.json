@@ -1,0 +1,29 @@
+{
+  "task_id": "L-008",
+  "status": "verified",
+  "branch": "feature/l-008-oneline-install-skill",
+  "base_revision": "55f2079",
+  "commands": [
+    {
+      "command": "python -m pytest tests -q --basetemp <scratch>",
+      "exit_code": 0,
+      "artifact": "evidence/L-008/pytest.txt"
+    },
+    {
+      "command": "python release/verify_manifest.py",
+      "exit_code": 0,
+      "artifact": "evidence/L-008/verify-manifest.txt"
+    },
+    {
+      "command": "python -m release.build_github_release --out <scratch> --tag v0.1.2 (local, unpublished)",
+      "exit_code": 0,
+      "artifact": "evidence/L-008/bundle-build.txt"
+    }
+  ],
+  "portable_bundle_sha256": "7ffcf70c7c674f8647eb83b6c7b4b3ce30cf0ac8cbf5c3aa9a0699d3852fdb60",
+  "portable_bundle_source_revision": "6254b0158a6e7d1f895981cdfd86eb349df0a54c",
+  "limitations": [
+    "Bundle built locally for the hash only; not published (release authority required)",
+    "Without a private --basetemp, 16 tests error on this host because pytest-of-006006 in %TEMP% is not writable (identical on main)"
+  ]
+}
