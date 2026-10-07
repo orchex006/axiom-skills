@@ -24,6 +24,6 @@
   "portable_bundle_source_revision": "6254b0158a6e7d1f895981cdfd86eb349df0a54c",
   "limitations": [
     "Bundle built locally for the hash only; not published (release authority required)",
-    "Without a private --basetemp, 16 tests error on this host because pytest-of-006006 in %TEMP% is not writable (identical on main)"
+    "Without a private --basetemp, 16 tests error on this host because pytest-of-<user> in %TEMP% is not writable (identical on main)"
   ]
 }
