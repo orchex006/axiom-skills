@@ -1,0 +1,5 @@
+$ verify_manifest; build_plugin_bundle; pytest
+OK skills bundle verification: component=axiom-skills version=0.1.5 channel=experimental files=44 scopes=policy,skills,adapters,plugins,.agents/plugins,.claude-plugin,marketplace-plugins,templates/bootstrap
+OK plugin bundle: 8 skills and policy match canonical bytes
+224 passed in 26.76s
+exit=0

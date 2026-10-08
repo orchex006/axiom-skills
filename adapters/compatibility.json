@@ -2,7 +2,7 @@
   "record_version": 2,
   "profile": "adapter-compatibility-v2",
   "component": "axiom-skills",
-  "component_version": "0.1.4",
+  "component_version": "0.1.5",
   "spec_version": "2.0.0-draft.1",
   "as_of": "2026-10-04",
   "scope": "Host/version/capability evidence for the portable skills bundle. Repository tests and installed-host runtime results are separate. No runtime verification milestone is a prerequisite for downloading instructions.",
@@ -109,7 +109,7 @@
           "test_class": "CodexStopHookTests"
         }
       ],
-      "adapter_version": "0.1.4",
+      "adapter_version": "0.1.5",
       "protocol_version": 1,
       "version_probe": "not_run",
       "installed_version": null,
@@ -188,7 +188,7 @@
           "test_class": "ClaudeTaskCompletedHookTests"
         }
       ],
-      "adapter_version": "0.1.4",
+      "adapter_version": "0.1.5",
       "protocol_version": 1,
       "version_probe": "not_run",
       "installed_version": null,
@@ -262,7 +262,7 @@
           "test_class": "GeminiAfterAgentHookTests"
         }
       ],
-      "adapter_version": "0.1.4",
+      "adapter_version": "0.1.5",
       "protocol_version": 1,
       "version_probe": "not_run",
       "installed_version": null,
@@ -344,7 +344,7 @@
           "test_class": "AntigravityStopHookTests"
         }
       ],
-      "adapter_version": "0.1.4",
+      "adapter_version": "0.1.5",
       "protocol_version": 1,
       "version_probe": "not_run",
       "installed_version": null,

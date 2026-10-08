@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "component": "axiom-skills",
-  "component_version": "0.1.4",
+  "component_version": "0.1.5",
   "channel": "experimental",
   "released": false,
   "spec_version": "2.0.0-draft.1",
@@ -79,7 +79,7 @@
     {
       "path": "skills/graph-install/SKILL.md",
       "role": "skill",
-      "sha256": "c2138ba1fda70b986331b67d85312f3e037b642f1dd680d35f173386c27e8431",
+      "sha256": "c430c789dbd206820dd18944d30508f368439247acbe618aedbde309779b7bc1",
       "bytes": 9849
     },
     {
@@ -191,19 +191,19 @@
     {
       "path": "adapters/compatibility.json",
       "role": "host-adapter-compatibility",
-      "sha256": "2365ddd66db684b348793d4daaac0d5a92df1ac2d7001c8bfdb58facaa2616e2",
+      "sha256": "0a5204ac93547a5e440a0c0786a765e3735046d917250569a4d47a0cb8fa5622",
       "bytes": 12778
     },
     {
       "path": "plugins/axiom/.claude-plugin/plugin.json",
       "role": "plugin-package",
-      "sha256": "c8b741945105ed70b1d765e720c74baaa0661060a3c83c6a7368dbe7270f278e",
+      "sha256": "35d845b015d0138ad5d45d2a1ac33e82bb6e95b45fb26ab8b4d2876402a789e6",
       "bytes": 165
     },
     {
       "path": "plugins/axiom/.codex-plugin/plugin.json",
       "role": "plugin-package",
-      "sha256": "a5bd19168c1dd0e4f4c12af6290474250ae054825456d0468fbaa67799186b45",
+      "sha256": "d3df0bf0be7b5325395537217ecf2d0d173e51bea97f16606222f54f753e5ba9",
       "bytes": 793
     },
     {
@@ -221,7 +221,7 @@
     {
       "path": "plugins/axiom/gemini-extension.json",
       "role": "plugin-package",
-      "sha256": "6ea43073fe5bd3880d449eaf735fd11443c3bfe50103ecdb11a1e282ad49729f",
+      "sha256": "e47a8764a3f799f2bed5cac8c1b461e57a8fdd8543541d5aae8a9c8e4903fe87",
       "bytes": 156
     },
     {
@@ -269,7 +269,7 @@
     {
       "path": "plugins/axiom/skills/graph-install/SKILL.md",
       "role": "plugin-package",
-      "sha256": "c2138ba1fda70b986331b67d85312f3e037b642f1dd680d35f173386c27e8431",
+      "sha256": "c430c789dbd206820dd18944d30508f368439247acbe618aedbde309779b7bc1",
       "bytes": 9849
     },
     {
