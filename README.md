@@ -33,7 +33,7 @@ skills/                   eight Agent Skills, one SKILL.md each
   graph-doctor            diagnose the graph service and its prerequisites
   graph-update            check and delegate one approved update plan
   graph-install           provision the ecosystem in the contract order and report honestly
-  axiom-cli-install       tier-aware install/update/doctor/uninstall through the distributed entrypoint
+  axiom-cli-install       tier-aware install/update/doctor/uninstall through the distributed entrypoint (axm, the short name of axiom-cli)
 adapters/                 per-host adapters (see the host table below)
   common/hook_runtime.py  shared bounded runtime: wall-clock budget, retry cap, pending evidence
   common/degraded_policy.json   per-repository strict/advisory mode

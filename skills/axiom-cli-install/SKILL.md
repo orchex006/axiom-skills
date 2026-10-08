@@ -1,6 +1,6 @@
 ---
 name: axiom-cli-install
-description: Install with the ADR-0033 one-line command (or axiom-cli install --yes), then update, doctor and uninstall through the distributed axiom-cli entrypoint only, reading the distribution contract dependency table and release tiers before installing anything, refusing an undeclared target, and recording every target it could not exercise as unverified.
+description: Install with the ADR-0033 one-line command and update with the ADR-0035 one-line update command, then drive install, update, doctor, version and uninstall through `axm` (the ADR-0036 short name of the distributed axiom-cli entrypoint; axiom-cli on 0.1.4 or older) only, reading the distribution contract dependency table and release tiers before installing anything, refusing an undeclared target, and recording every target it could not exercise as unverified.
 ---
 
 # Distributed CLI provisioning
@@ -28,6 +28,21 @@ GitHub Release asset of `orchex006/axiom-cli`:
 - A pinned version: `https://github.com/orchex006/axiom-cli/releases/download/vX.Y.Z/install.ps1`
   (or `install.sh`).
 
+Updating an existing installation (ADR-0035, from 0.1.4) is also one command:
+
+- Windows x64: `powershell -ExecutionPolicy Bypass -c "irm https://github.com/orchex006/axiom-cli/releases/latest/download/update.ps1 | iex"`
+- macOS, Linux x64 and WSL2: `curl -fsSL https://github.com/orchex006/axiom-cli/releases/latest/download/update.sh | sh`
+
+The update script runs the installation's own `axm update` (or `axiom-cli update` before 0.1.5),
+upgrades a 0.1.0/0.1.2 layout through the verified install hand-off, stops without change when
+nothing is installed, and stops while leftover `AXIOM_CLI_INSTALL_ROOT`, `AXIOM_ENGINE_BIN` or
+`AXIOM_HOME` variables are set. Offer it when no Axiom command is on PATH.
+
+**Command name.** `axm` (`axm.exe` on Windows) is the short name of `axiom-cli` (ADR-0036, installed
+from 0.1.5): the same program, a byte-identical copy in the same `bin`, with identical verbs, options
+and exit codes. Use `axm` for every verb. When `axm` is not found but `axiom-cli` is (0.1.4 or
+older), use `axiom-cli` with the same verbs, or offer the update command, which brings `axm`.
+
 The script verifies the release archive's SHA-256 and hands off to `axiom-cli install`, which prints
 the plan (version, components, install root, PATH change, size) and asks `Proceed? [Y/n]` once.
 
@@ -36,13 +51,13 @@ confirming step. Never answer the prompt, pass `--yes` / `-Yes` or set `AXIOM_IN
 own initiative, and never invent or copy an approval digest the human did not approve. When the
 human explicitly asks for an unattended install, `--yes` (or `axiom-cli install --yes` from an
 extracted release) is the documented non-interactive form; `--no-modify-path` skips the PATH
-change. After the install, in a new terminal: `axiom-cli version`, `axiom-cli doctor` (diagnosis
-starts here), `axiom-cli update` (checks the recorded channel, shows the plan, asks once) and
-`axiom-cli uninstall` (keeps user data).
+change. After the install, in a new terminal: `axm version`, `axm doctor` (diagnosis starts here),
+`axm update` (checks the recorded channel, shows the plan, asks once) and `axm uninstall` (keeps
+user data).
 
 **Legacy installations.** A 0.1.0/0.1.2 CLI store, a 0.1.2 bootstrap root such as
-`%USERPROFILE%xiom`, a stale `axiom-cli` earlier on PATH or leftover `AXIOM_*` variables are
-reported by `axiom-cli doctor`. Point the human to the L-006 adoption shown in the install plan
+`%USERPROFILE%\axiom`, a stale `axiom-cli` earlier on PATH or leftover `AXIOM_*` variables are
+reported by `axm doctor` (`axiom-cli doctor` on older installs). Point the human to the L-006 adoption shown in the install plan
 (in place for a CLI store, `axiom-cli install --adopt <path>` for a bootstrap root, otherwise side
 by side); never delete a legacy tree yourself.
 
@@ -117,8 +132,9 @@ authority.
    architecture you observed. **Refuse to install on a target the contract does not declare**: an
    undeclared platform is a refusal by name, not a best-effort install.
 
-3. **Probe and drive every verb through the distributed entrypoint only.** Use `axiom-cli`
-   (`axiom-cli.exe` on Windows) for `install`, `update` (`check`, `plan`, `apply`, `rollback`),
+3. **Probe and drive every verb through the distributed entrypoint only.** Use `axm`
+   (`axm.exe` on Windows), the short name of `axiom-cli`, or `axiom-cli` itself on 0.1.4 or older,
+   for `install`, `update` (`check`, `plan`, `apply`, `rollback`),
    `doctor`, `version` and `uninstall`, with `--json` for the machine-readable envelope. Never call
    an internal installer, a repository script or a private engine entrypoint directly; where a
    behaviour already exists in an owner repository, the distributed entrypoint invokes it and
@@ -137,11 +153,11 @@ authority.
    `axiom-cli install` from an extracted release); `axiom-cli install` installs or
    repairs this platform's pinned component set into one per-user root with one `bin` and one
    `installed.json`. An install result envelope must name every
-   installed artifact, its version and its sha256. Verify with `axiom-cli doctor` and
-   `axiom-cli version` and record the result per component and per target; a successful download is
+   installed artifact, its version and its sha256. Verify with `axm doctor` and `axm version`
+   (`axiom-cli doctor` and `axiom-cli version` on 0.1.4 or older) and record the result per component and per target; a successful download is
    not a completed installation.
 
-6. **Update through the recorded channel only.** A bare `axiom-cli update` reads the channel source
+6. **Update through the recorded channel only.** A bare `axm update` (or the update one-liner) reads the channel source
    recorded in `installed.json` (the release's `channel.json`), shows the plan and asks once; ask the
    human before confirming. The J-007 subcommands `update check`, `plan`, `apply` and `rollback`
    resolve versions only from the recorded manifest (`channels/stable.json`); a branch tip, a tag
