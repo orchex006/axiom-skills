@@ -1,3 +1,7 @@
+## 0.1.5 — short command axm release
+
+- Version 0.1.5; carries L-017 (the axiom-cli-install skill drives Axiom through `axm`, ADR-0036) [L-019].
+
 ## Unreleased — L-017 skills drive Axiom through axm
 
 - The `axiom-cli-install` skill (id unchanged) and its plugin copy use `axm` (ADR-0036 short name of `axiom-cli`) for every verb, fall back to `axiom-cli` on 0.1.4 or older, and offer the ADR-0035 update one-liners (`update.ps1` / `update.sh`). Fix a control character (BEL) that had replaced `\a` in `%USERPROFILE%\axiom`. Workflow checks require the short commands, the update scripts and no control characters; manifest digests refreshed (R06, R13).
