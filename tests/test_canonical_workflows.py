@@ -709,6 +709,9 @@ class AxiomCliInstallChecks:
         "wsl2-linux-x64",
     )
     COMMANDS = ("axiom-cli install", "axiom-cli doctor", "axiom-cli version")
+    # ADR-0036 (L-017): `axm` is the short name agents use; ADR-0035: the update one-liner.
+    SHORT_COMMANDS = ("axm update", "axm doctor", "axm version", "axm uninstall")
+    UPDATE_SCRIPTS = ("update.ps1", "update.sh")
     VERBS = ("install", "update", "doctor", "version", "uninstall")
     FORBIDDEN = ("elevation", "bash", "wsl", "docker", "node.js")
     AUTHORITY_HEADING = "resolving an authority revision"
@@ -752,6 +755,14 @@ class AxiomCliInstallChecks:
         for command in cls.COMMANDS:
             if command not in text:
                 problems.append(f"skill never names the {command} command")
+        for command in cls.SHORT_COMMANDS:
+            if command not in text:
+                problems.append(f"skill never names the short command {command}")
+        for script in cls.UPDATE_SCRIPTS:
+            if script not in text:
+                problems.append(f"skill does not offer the {script} update one-liner")
+        if any(ord(ch) < 32 and ch not in "\n\r\t" for ch in text):
+            problems.append("skill contains a control character")
         for verb in cls.VERBS:
             if verb not in flat:
                 problems.append(f"skill does not drive the {verb} verb")
@@ -1033,6 +1044,17 @@ class AxiomCliInstallSkillTests(unittest.TestCase):
 
     def test_skill_satisfies_contract(self):
         self.assertEqual(AxiomCliInstallChecks.check(read("skills/axiom-cli-install/SKILL.md")), [])
+
+    def test_skill_and_plugin_copy_lead_with_axm(self):
+        for path in ("skills/axiom-cli-install/SKILL.md", "plugins/axiom/skills/axiom-cli-install/SKILL.md"):
+            text = read(path)
+            self.assertIn("short name of `axiom-cli`", text, path)
+            self.assertIn("ADR-0036", text, path)
+            self.assertIn("releases/latest/download/update.ps1", text, path)
+        fixture = read("skills/axiom-cli-install/SKILL.md").replace("axm update", "axiom-cli update")
+        self.assertTrue(any("axm update" in p for p in AxiomCliInstallChecks.check(fixture)))
+        control = read("skills/axiom-cli-install/SKILL.md") + chr(7)
+        self.assertIn("skill contains a control character", AxiomCliInstallChecks.check(control))
 
     def test_skill_reads_the_contract_before_installing(self):
         text = read("skills/axiom-cli-install/SKILL.md")

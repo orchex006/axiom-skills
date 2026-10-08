@@ -1,0 +1,7 @@
+$ python release/verify_manifest.py && python release/build_plugin_bundle.py
+OK skills bundle verification: component=axiom-skills version=0.1.4 channel=experimental files=44 scopes=policy,skills,adapters,plugins,.agents/plugins,.claude-plugin,marketplace-plugins,templates/bootstrap
+OK plugin bundle: 8 skills and policy match canonical bytes
+$ PYTHONUTF8=1 python -m pytest tests -q -p no:cacheprovider --basetemp <scratch>
+........                                                                 [100%]
+224 passed in 48.27s
+exit=0
